@@ -2,6 +2,26 @@
 
 A robust 24/7 monitoring system that watches the boat slip waiting list in Konstanz and notifies you immediately via multi-channel notifications when it opens in Q1 2026.
 
+## ✨ New! Interactive Setup
+
+**Get started in 5 minutes** with our new interactive setup script:
+
+```bash
+cd boat-slip-monitor
+./scripts/setup.sh
+```
+
+The script will:
+- ✅ Guide you through Telegram bot creation
+- ✅ Automatically get your Chat ID (no more empty results!)
+- ✅ Generate your .env file
+- ✅ Install and configure everything
+
+**Need help with Telegram?** See our detailed guides:
+- 📖 [GETTING_STARTED.md](GETTING_STARTED.md) - Step-by-step walkthrough
+- 📱 [docs/TELEGRAM_SETUP.md](docs/TELEGRAM_SETUP.md) - Complete Telegram guide
+- 🔧 [scripts/get-telegram-chat-id.sh](scripts/get-telegram-chat-id.sh) - Chat ID helper script
+
 ## Features
 
 - **Intelligent Monitoring**: Checks every 5 minutes with smart change detection

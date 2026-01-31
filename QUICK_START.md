@@ -22,12 +22,46 @@ Before starting, make sure you have:
 
 ### Get Your Chat ID
 
-1. Send a message to your new bot (any message)
-2. Open this URL in your browser (replace TOKEN):
+#### Option A: Use Our Helper Script (Easiest)
+
+```bash
+cd boat-slip-monitor
+./scripts/get-telegram-chat-id.sh
+```
+
+Paste your bot token, then follow the instructions to message your bot.
+
+#### Option B: Manual Method
+
+1. **IMPORTANT**: Search for your bot in Telegram (use the username you created)
+2. **Click START** or send any message (e.g., "hello")
+3. Open this URL in your browser (replace `<YOUR_TOKEN>` with your actual bot token):
    ```
    https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates
    ```
-3. Look for `"chat":{"id":` and **copy the number** (e.g., `123456789`)
+4. You should see something like:
+   ```json
+   {"ok":true,"result":[{"update_id":123,"message":{"message_id":1,"from":{"id":123456789,...},"chat":{"id":123456789,...}}}]}
+   ```
+5. Look for `"chat":{"id":` and **copy the number** (e.g., `123456789`)
+
+#### Troubleshooting Empty Result
+
+If you see `{"ok":true,"result":[]}`:
+
+**❌ Problem**: You haven't messaged your bot yet, or the updates were already fetched.
+
+**✅ Solution**:
+1. Make sure you're searching for the RIGHT bot (check the username)
+2. Click the **START** button in the bot chat
+3. Send a test message like "hello"
+4. Refresh the URL in your browser
+5. The result should now show your message and chat ID
+
+**Still empty?**
+- Try sending another message
+- Wait 10 seconds and refresh
+- Make sure you're using the correct bot token
 
 **That's it!** You now have everything required. Email and SMS are optional.
 

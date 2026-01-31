@@ -68,19 +68,74 @@ if [ "$SKIP_ENV_SETUP" != "true" ]; then
   # Telegram Configuration (Required)
   echo "📱 Telegram Configuration (REQUIRED for notifications)"
   echo "------------------------------------------------------"
-  echo "To get Telegram bot token:"
-  echo "1. Message @BotFather on Telegram"
-  echo "2. Send /newbot and follow instructions"
-  echo "3. Copy the bot token"
+  echo ""
+  echo "Step 1: Create your Telegram bot"
+  echo "  1. Open Telegram and search for @BotFather"
+  echo "  2. Send: /newbot"
+  echo "  3. Follow instructions to create your bot"
+  echo "  4. Copy the bot token (looks like: 123456789:ABCdefGHI...)"
   echo ""
   TELEGRAM_BOT_TOKEN=$(prompt_input "Telegram Bot Token" "" "false")
-  echo ""
-  echo "To get your Chat ID:"
-  echo "1. Message your bot"
-  echo "2. Visit: https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates"
-  echo "3. Find 'chat' -> 'id' in the response"
-  echo ""
-  TELEGRAM_CHAT_ID=$(prompt_input "Telegram Chat ID" "" "false")
+
+  if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+    echo "⚠️  Warning: Telegram token is required for notifications!"
+    echo "You can add it later by editing .env or running ./scripts/configure-credentials.sh"
+    TELEGRAM_CHAT_ID=""
+  else
+    echo ""
+    echo "Step 2: Get your Chat ID"
+    echo ""
+    USE_HELPER=$(prompt_yn "Do you want to use our helper script to get your Chat ID?" "y")
+
+    if [ "$USE_HELPER" = "true" ]; then
+      echo ""
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo "📱 IMPORTANT: Before continuing!"
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo ""
+      echo "1. Open Telegram on your phone or computer"
+      echo "2. Search for your bot username"
+      echo "3. Click START (or send any message like 'hello')"
+      echo "4. Then come back here and press Enter"
+      echo ""
+      read -p "Press Enter when you've sent a message to your bot..."
+      echo ""
+
+      # Run the helper script
+      CHAT_ID_RESULT=$(bash scripts/get-telegram-chat-id.sh "$TELEGRAM_BOT_TOKEN" 2>&1 | grep "Your Chat ID:" | cut -d: -f2 | tr -d ' ')
+
+      if [ -n "$CHAT_ID_RESULT" ]; then
+        TELEGRAM_CHAT_ID="$CHAT_ID_RESULT"
+        echo "✅ Chat ID found: $TELEGRAM_CHAT_ID"
+      else
+        echo ""
+        echo "⚠️  Couldn't automatically find your Chat ID."
+        echo ""
+        echo "Manual method:"
+        echo "  1. Make sure you sent a message to your bot"
+        echo "  2. Visit this URL in your browser:"
+        echo "     https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates"
+        echo "  3. Look for \"chat\":{\"id\":NUMBERS"
+        echo "  4. Copy those numbers"
+        echo ""
+        TELEGRAM_CHAT_ID=$(prompt_input "Enter your Chat ID (or press Enter to skip)" "" "false")
+      fi
+    else
+      echo ""
+      echo "Manual method to get Chat ID:"
+      echo "  1. Open Telegram and send a message to your bot"
+      echo "  2. Visit this URL in your browser:"
+      echo "     https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates"
+      echo "  3. Look for \"chat\":{\"id\":NUMBERS"
+      echo "  4. Copy those numbers (e.g., 123456789)"
+      echo ""
+      echo "Common issues:"
+      echo "  - Empty result []? → You haven't messaged your bot yet!"
+      echo "  - Make sure to click START in your bot chat first"
+      echo ""
+      TELEGRAM_CHAT_ID=$(prompt_input "Telegram Chat ID" "" "false")
+    fi
+  fi
   echo ""
 
   # Email Configuration (Optional)
@@ -108,29 +163,6 @@ if [ "$SKIP_ENV_SETUP" != "true" ]; then
     SMTP_PASSWORD=""
     SMTP_FROM=""
     SMTP_TO=""
-  fi
-  echo ""
-
-  # Twilio Configuration (Optional)
-  SETUP_TWILIO=$(prompt_yn "Do you want to configure SMS/Voice notifications?" "n")
-  if [ "$SETUP_TWILIO" = "true" ]; then
-    echo ""
-    echo "📞 Twilio Configuration (Optional)"
-    echo "----------------------------------"
-    echo "Sign up at https://www.twilio.com"
-    echo ""
-    TWILIO_ACCOUNT_SID=$(prompt_input "Twilio Account SID" "" "false")
-    TWILIO_AUTH_TOKEN=$(prompt_input "Twilio Auth Token" "" "true")
-    echo ""
-    TWILIO_PHONE_NUMBER=$(prompt_input "Twilio Phone Number (e.g., +1234567890)" "" "false")
-    TWILIO_TO_PHONE_NUMBER=$(prompt_input "Your Phone Number (e.g., +1234567890)" "" "false")
-    ENABLE_VOICE_CALLS=$(prompt_yn "Enable Voice Calls? (costs per call)" "n")
-  else
-    TWILIO_ACCOUNT_SID=""
-    TWILIO_AUTH_TOKEN=""
-    TWILIO_PHONE_NUMBER=""
-    TWILIO_TO_PHONE_NUMBER=""
-    ENABLE_VOICE_CALLS="false"
   fi
   echo ""
 
@@ -167,12 +199,6 @@ SMTP_PASSWORD=${SMTP_PASSWORD}
 SMTP_FROM=${SMTP_FROM}
 SMTP_TO=${SMTP_TO}
 
-# Twilio (SMS & Voice) - Optional
-TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
-TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
-TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
-TWILIO_TO_PHONE_NUMBER=${TWILIO_TO_PHONE_NUMBER}
-
 # Application
 NODE_ENV=${NODE_ENV}
 LOG_LEVEL=${LOG_LEVEL}
@@ -183,7 +209,6 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 
 # Monitoring
 CHECK_INTERVAL_MINUTES=${CHECK_INTERVAL}
-ENABLE_VOICE_CALLS=${ENABLE_VOICE_CALLS}
 EOF
 
   echo "✅ .env file created successfully!"
@@ -240,12 +265,6 @@ if [ ! -z "$SMTP_HOST" ]; then
   echo "✓ Email:           Configured"
 else
   echo "○ Email:           Not configured (optional)"
-fi
-
-if [ ! -z "$TWILIO_ACCOUNT_SID" ]; then
-  echo "✓ SMS/Voice:       Configured"
-else
-  echo "○ SMS/Voice:       Not configured (optional)"
 fi
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

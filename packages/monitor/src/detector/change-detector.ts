@@ -1,7 +1,6 @@
-import { createDiff } from 'diff';
+import * as Diff from 'diff';
 import {
   createModuleLogger,
-  calculateSimilarity,
   CRITICAL_KEYWORDS,
   IMPORTANT_KEYWORDS,
   ChangeType,
@@ -14,13 +13,16 @@ const logger = createModuleLogger('ChangeDetector');
 
 export class ChangeDetector {
   async detectChanges(
-    previousHtml: string | null,
+    previousHtmlNormalized: string | null,
+    previousHtmlOriginal: string | null,
     currentHtml: string,
-    currentNormalizedHtml: string
+    currentNormalizedHtml: string,
+    previousHtmlHash: string | null = null,
+    currentHtmlHash: string | null = null
   ): Promise<ChangeComparisonResult> {
-    // First check
-    if (!previousHtml) {
-      logger.info('First check - no previous HTML');
+    // First check - don't trigger critical alerts
+    if (!previousHtmlNormalized) {
+      logger.info('First check - no previous HTML (skipping critical keyword/form detection)');
       return {
         hasChanged: false,
         type: null,
@@ -30,50 +32,89 @@ export class ChangeDetector {
       };
     }
 
-    logger.info('Analyzing content for changes');
+    logger.info('Analyzing content for changes (with previous data)');
 
-    // Check for form detection first (highest priority)
-    const formDetection = this.detectForms(currentHtml);
-    if (formDetection.detected) {
-      logger.info('Form detected!', { type: formDetection.type });
-      return {
-        hasChanged: true,
-        type: ChangeType.FORM_DETECTED,
-        priority: Priority.CRITICAL,
-        confidence: formDetection.confidence,
-        description: `${formDetection.type} form detected on page`,
-        diff: this.generateDiff(previousHtml, currentHtml)
-      };
-    }
+    // Use hash comparison instead of Levenshtein (prevents memory issues with large HTML)
+    const hasSignificantChange = previousHtmlHash !== currentHtmlHash;
+    const similarity = hasSignificantChange ? 0.0 : 1.0;
 
-    // Check for critical keywords
-    const keywordMatch = this.detectKeywords(currentNormalizedHtml);
-    if (keywordMatch.matched) {
-      logger.warn('Critical keywords detected!', { keywords: keywordMatch.keywords });
-      return {
-        hasChanged: true,
-        type: ChangeType.KEYWORD_MATCH,
-        priority: keywordMatch.priority,
-        confidence: keywordMatch.confidence,
-        description: keywordMatch.description,
-        matchedKeywords: keywordMatch.keywords,
-        diff: this.generateDiff(previousHtml, currentHtml)
-      };
-    }
+    logger.info('Hash comparison result', {
+      previousHash: previousHtmlHash?.substring(0, 8),
+      currentHash: currentHtmlHash?.substring(0, 8),
+      hasChanged: hasSignificantChange
+    });
 
-    // Calculate content similarity
-    const similarity = calculateSimilarity(previousHtml, currentNormalizedHtml);
-    const hasSignificantChange = similarity < 0.95; // 95% similarity threshold
-
+    // Only check for forms/keywords if there's an actual content change
     if (hasSignificantChange) {
-      logger.info('Content change detected', { similarity });
+      logger.info('Content change detected, checking for forms and keywords', { similarity });
+
+      // Check for form detection first (highest priority)
+      const currentFormDetection = this.detectForms(currentHtml);
+      if (currentFormDetection.detected) {
+        // Check if form was already present in previous HTML
+        const previousFormDetection = this.detectForms(previousHtmlOriginal || previousHtmlNormalized);
+        if (!previousFormDetection.detected) {
+          // NEW form detected!
+          logger.warn('🚨 CRITICAL: NEW Form detected!', { type: currentFormDetection.type });
+          const description = currentFormDetection.type === 'PDF'
+            ? '📄 PDF-Antragsformular gefunden! Download jetzt möglich.'
+            : '📝 Online-Anmeldeformular entdeckt! Du kannst dich jetzt bewerben.';
+          return {
+            hasChanged: true,
+            type: ChangeType.FORM_DETECTED,
+            priority: Priority.CRITICAL,
+            confidence: currentFormDetection.confidence,
+            description,
+            diff: this.generateDiff(previousHtmlOriginal || previousHtmlNormalized, currentHtml)
+          };
+        } else {
+          logger.info('Form detected but was already present in previous HTML');
+        }
+      }
+
+      // Check for critical keywords
+      const currentKeywordMatch = this.detectKeywords(currentNormalizedHtml);
+      if (currentKeywordMatch.matched) {
+        // Check if same keywords were in previous HTML
+        const previousKeywordMatch = this.detectKeywords(previousHtmlNormalized);
+
+        // Find NEW keywords (in current but not in previous)
+        const newKeywords = currentKeywordMatch.keywords.filter(
+          keyword => !previousKeywordMatch.keywords.includes(keyword)
+        );
+
+        if (newKeywords.length > 0) {
+          // NEW keywords detected!
+          logger.warn('🚨 CRITICAL: NEW Keywords detected!', { newKeywords });
+          return {
+            hasChanged: true,
+            type: ChangeType.KEYWORD_MATCH,
+            priority: currentKeywordMatch.priority,
+            confidence: currentKeywordMatch.confidence,
+            description: currentKeywordMatch.description,
+            matchedKeywords: newKeywords,
+            diff: this.generateDiff(previousHtmlOriginal || previousHtmlNormalized, currentHtml)
+          };
+        } else {
+          logger.info('Keywords found but were already present in previous HTML', {
+            keywords: currentKeywordMatch.keywords
+          });
+        }
+      }
+    } else {
+      logger.info('No content change detected - skipping form/keyword checks', { similarity });
+    }
+
+    // If we reach here and there was a significant change, it's a regular content change
+    if (hasSignificantChange) {
+      logger.info('Regular content change detected (no critical keywords/forms)', { similarity });
       return {
         hasChanged: true,
         type: ChangeType.CONTENT,
         priority: Priority.INFO,
         confidence: 1 - similarity,
-        description: `Content changed (${Math.round((1 - similarity) * 100)}% difference)`,
-        diff: this.generateDiff(previousHtml, currentHtml)
+        description: '📝 Die Seite wurde aktualisiert. Schau dir die Änderungen im Screenshot an.',
+        diff: this.generateDiff(previousHtmlOriginal || previousHtmlNormalized, currentHtml)
       };
     }
 
@@ -153,21 +194,36 @@ export class ChangeDetector {
     }
 
     if (matchedCritical.length > 0) {
+      // More user-friendly descriptions based on keywords
+      let description = '🚨 Wichtige Änderung auf der Seite!';
+      if (matchedCritical.some(k => k.includes('warteliste') || k.includes('anmeldung'))) {
+        description = '⚠️ Die Warteliste könnte bald öffnen! Neue Informationen zur Anmeldung gefunden.';
+      } else if (matchedCritical.some(k => k.includes('formular') || k.includes('antrag'))) {
+        description = '📝 Anmeldeformular wurde gefunden! Jetzt könnte eine Bewerbung möglich sein.';
+      }
+
       return {
         matched: true,
         priority: Priority.CRITICAL,
         confidence: Math.min(0.9 + (matchedCritical.length * 0.02), 1.0),
-        description: `Critical keywords detected: ${matchedCritical.join(', ')}`,
+        description,
         keywords: matchedCritical
       };
     }
 
     if (matchedImportant.length > 0) {
+      let description = 'ℹ️ Relevante Änderung auf der Seite gefunden.';
+      if (matchedImportant.some(k => k.includes('verfügbar') || k.includes('available'))) {
+        description = '✅ Neue Verfügbarkeits-Informationen wurden veröffentlicht.';
+      } else if (matchedImportant.some(k => k.includes('termin') || k.includes('öffnung'))) {
+        description = '📅 Neue Informationen zu Terminen oder Öffnungszeiten.';
+      }
+
       return {
         matched: true,
         priority: Priority.IMPORTANT,
         confidence: Math.min(0.7 + (matchedImportant.length * 0.05), 0.9),
-        description: `Important keywords detected: ${matchedImportant.join(', ')}`,
+        description,
         keywords: matchedImportant
       };
     }
@@ -183,8 +239,8 @@ export class ChangeDetector {
 
   private generateDiff(oldContent: string, newContent: string): string {
     try {
-      const diffResult = createDiff(oldContent, newContent);
-      return JSON.stringify(diffResult, null, 2);
+      const diffResult = Diff.createPatch('content', oldContent, newContent, 'Old', 'New');
+      return diffResult;
     } catch (error) {
       logger.error('Failed to generate diff', { error });
       return 'Diff generation failed';

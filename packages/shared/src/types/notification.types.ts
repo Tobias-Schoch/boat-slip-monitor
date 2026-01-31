@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { Priority } from './change.types';
 
+// Re-export Priority for convenience
+export { Priority };
+
 export enum NotificationChannel {
   TELEGRAM = 'TELEGRAM',
-  EMAIL = 'EMAIL',
-  SMS = 'SMS',
-  VOICE = 'VOICE'
+  EMAIL = 'EMAIL'
 }
 
 export enum NotificationStatus {

@@ -1,26 +1,36 @@
+// Load env first
+import '../../env-loader';
+
 import TelegramBot from 'node-telegram-bot-api';
 import fs from 'fs/promises';
 import { NotificationPayload, NotificationResult, createModuleLogger } from '@boat-monitor/shared';
+import { settingsService } from '../../services/settings-service';
 
 const logger = createModuleLogger('TelegramChannel');
 
 class TelegramChannel {
   private bot: TelegramBot | null = null;
-  private chatId: string;
+  private chatId: string = '';
+  private initialized: boolean = false;
 
-  constructor() {
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-    this.chatId = process.env.TELEGRAM_CHAT_ID || '';
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
 
-    if (token && this.chatId) {
-      this.bot = new TelegramBot(token, { polling: false });
-      logger.info('Telegram bot initialized');
+    const config = await settingsService.getTelegramConfig();
+
+    if (config) {
+      this.bot = new TelegramBot(config.token, { polling: false });
+      this.chatId = config.chatId;
+      this.initialized = true;
+      logger.info('Telegram bot initialized from database');
     } else {
-      logger.warn('Telegram bot not configured');
+      logger.warn('Telegram bot not configured in database');
     }
   }
 
   async send(payload: NotificationPayload): Promise<NotificationResult> {
+    await this.initialize();
+
     if (!this.bot || !this.chatId) {
       return {
         success: false,
@@ -32,16 +42,21 @@ class TelegramChannel {
     try {
       const message = this.formatMessage(payload);
 
+      // Build inline keyboard buttons
+      const buttons: any[] = [];
+
+      // Only add URL button if we have a valid URL (not localhost)
+      if (payload.url && !payload.url.includes('localhost')) {
+        buttons.push({ text: '🔍 View Page', url: payload.url });
+      }
+
+      buttons.push({ text: '✅ Acknowledge', callback_data: 'ack' });
+
       // Send text message
       const sentMessage = await this.bot.sendMessage(this.chatId, message, {
         parse_mode: 'Markdown',
         reply_markup: {
-          inline_keyboard: [
-            [
-              { text: '🔍 View Dashboard', url: payload.url || 'http://localhost:3000' },
-              { text: '✅ Acknowledge', callback_data: 'ack' }
-            ]
-          ]
+          inline_keyboard: [buttons]
         }
       });
 
@@ -57,7 +72,9 @@ class TelegramChannel {
         }
       }
 
-      logger.info('Telegram notification sent', { messageId: sentMessage.message_id });
+      logger.info('Telegram notification sent', {
+        messageId: sentMessage.message_id
+      });
 
       return {
         success: true,
@@ -74,6 +91,11 @@ class TelegramChannel {
     }
   }
 
+  private escapeMarkdown(text: string): string {
+    // Escape Markdown special characters for Telegram
+    return text.replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, '\\$&');
+  }
+
   private formatMessage(payload: NotificationPayload): string {
     const priorityEmoji = {
       INFO: 'ℹ️',
@@ -83,23 +105,20 @@ class TelegramChannel {
 
     const emoji = priorityEmoji[payload.priority] || 'ℹ️';
 
-    let message = `${emoji} *${payload.title}*\n\n`;
-    message += `${payload.message}\n\n`;
+    let message = `${emoji} *${this.escapeMarkdown(payload.title)}*\n\n`;
+    message += `${this.escapeMarkdown(payload.message)}\n\n`;
+
+    // Show matched keywords if available (user wants to know what changed)
+    if (payload.metadata?.matchedKeywords && payload.metadata.matchedKeywords.length > 0) {
+      const keywords = payload.metadata.matchedKeywords.map((k: string) => this.escapeMarkdown(k)).join(', ');
+      message += `🔍 Gefunden: ${keywords}\n\n`;
+    }
 
     if (payload.url) {
-      message += `🔗 URL: ${payload.url}\n`;
+      message += `🔗 ${this.escapeMarkdown(payload.url)}\n`;
     }
 
-    if (payload.metadata?.confidence) {
-      const confidence = Math.round(payload.metadata.confidence * 100);
-      message += `📊 Confidence: ${confidence}%\n`;
-    }
-
-    if (payload.metadata?.matchedKeywords && payload.metadata.matchedKeywords.length > 0) {
-      message += `🔑 Keywords: ${payload.metadata.matchedKeywords.join(', ')}\n`;
-    }
-
-    message += `\n⏰ ${new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}`;
+    message += `⏰ ${new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}`;
 
     return message;
   }

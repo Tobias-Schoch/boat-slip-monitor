@@ -1,4 +1,7 @@
-import { Queue, Worker, QueueScheduler } from 'bullmq';
+// Load env first
+import '../env-loader';
+
+import { Queue, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { REDIS_CONFIG, createModuleLogger } from '@boat-monitor/shared';
 
@@ -52,8 +55,7 @@ export const notificationQueue = new Queue('notification-queue', {
   }
 });
 
-// Queue scheduler (for delayed jobs and cron)
-export const scheduler = new QueueScheduler('check-queue', { connection });
+// Note: QueueScheduler was removed in BullMQ v5, scheduling is now built into the Queue
 
 // Health check
 export async function checkQueueHealth(): Promise<boolean> {
@@ -72,7 +74,6 @@ export async function closeQueues(): Promise<void> {
   try {
     await checkQueue.close();
     await notificationQueue.close();
-    await scheduler.close();
     await connection.quit();
     logger.info('Queues closed');
   } catch (error) {

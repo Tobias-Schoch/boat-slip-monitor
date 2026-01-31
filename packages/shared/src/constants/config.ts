@@ -31,24 +31,6 @@ export const NOTIFICATION_CONFIG = {
         maxNotifications: 5,
         windowMs: 300000 // 5 minutes
       }
-    },
-    {
-      channel: NotificationChannel.SMS,
-      enabled: !!process.env.TWILIO_ACCOUNT_SID,
-      priority: [Priority.CRITICAL],
-      rateLimit: {
-        maxNotifications: 3,
-        windowMs: 600000 // 10 minutes
-      }
-    },
-    {
-      channel: NotificationChannel.VOICE,
-      enabled: process.env.ENABLE_VOICE_CALLS === 'true',
-      priority: [Priority.CRITICAL],
-      rateLimit: {
-        maxNotifications: 1,
-        windowMs: 3600000 // 1 hour
-      }
     }
   ],
   MAX_RETRY_ATTEMPTS: 5,

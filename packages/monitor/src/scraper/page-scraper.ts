@@ -62,8 +62,8 @@ export class PageScraper {
         error: error instanceof Error ? error.message : String(error)
       };
     } finally {
-      if (page) {
-        await page.close().catch(err => {
+      if (page !== null) {
+        await (page as Page).close().catch((err: unknown) => {
           logger.warn('Failed to close page', { error: err });
         });
       }
@@ -108,8 +108,10 @@ export class PageScraper {
 
   private async normalizeHtml(page: Page): Promise<string> {
     // Remove dynamic elements before extracting HTML
+    // Note: This function runs in browser context where DOM APIs are available
     await page.evaluate(() => {
       // Remove scripts and styles
+      // @ts-expect-error - Running in browser context where document is available
       document.querySelectorAll('script, style, noscript').forEach(el => el.remove());
 
       // Remove cookie banners and consent dialogs
@@ -122,11 +124,14 @@ export class PageScraper {
         '[id*="gdpr"]'
       ];
       cookieSelectors.forEach(selector => {
+        // @ts-expect-error - Running in browser context
         document.querySelectorAll(selector).forEach(el => el.remove());
       });
 
       // Remove tracking pixels and analytics
+      // @ts-expect-error - Running in browser context
       document.querySelectorAll('img[width="1"][height="1"]').forEach(el => el.remove());
+      // @ts-expect-error - Running in browser context
       document.querySelectorAll('iframe[style*="display: none"]').forEach(el => el.remove());
     });
 
@@ -153,8 +158,13 @@ export class PageScraper {
     // Remove UUIDs
     normalized = normalized.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, 'UUID');
 
-    // Normalize whitespace
-    normalized = normalized.replace(/\s+/g, ' ').trim();
+    // Aggressive whitespace normalization to handle formatting differences
+    // 1. Remove whitespace between tags (handles formatted vs. minified HTML)
+    normalized = normalized.replace(/>\s+</g, '><');
+    // 2. Replace all remaining whitespace (including newlines) with single space
+    normalized = normalized.replace(/\s+/g, ' ');
+    // 3. Trim leading/trailing whitespace
+    normalized = normalized.trim();
 
     return normalized;
   }
@@ -178,8 +188,10 @@ export class PageScraper {
         type: 'png'
       });
 
-      logger.info('Screenshot saved', { filePath });
-      return filePath;
+      // Return absolute path so it can be accessed from other packages
+      const absolutePath = path.resolve(filePath);
+      logger.info('Screenshot saved', { filePath: absolutePath });
+      return absolutePath;
     } catch (error) {
       logger.error('Failed to take screenshot', { error });
       throw error;

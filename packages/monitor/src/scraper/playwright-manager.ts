@@ -53,6 +53,7 @@ export class PlaywrightManager {
     });
 
     // Apply stealth scripts to avoid bot detection
+    // Note: This function runs in browser context where window and navigator are available
     await context.addInitScript(() => {
       // Override webdriver property
       Object.defineProperty(navigator, 'webdriver', {
@@ -70,15 +71,18 @@ export class PlaywrightManager {
       });
 
       // Chrome property
+      // @ts-expect-error - window is available in browser context
       (window as any).chrome = {
         runtime: {}
       };
 
       // Permissions
+      // @ts-expect-error - window is available in browser context
       const originalQuery = window.navigator.permissions.query;
+      // @ts-expect-error - window is available in browser context
       window.navigator.permissions.query = (parameters: any) =>
         parameters.name === 'notifications'
-          ? Promise.resolve({ state: 'denied' } as PermissionStatus)
+          ? Promise.resolve({ state: 'denied' } as any)
           : originalQuery(parameters);
     });
 

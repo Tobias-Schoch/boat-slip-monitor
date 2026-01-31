@@ -1,8 +1,12 @@
+// MUST be first import to load .env before anything else
+import './env-loader';
+
 import { createModuleLogger } from '@boat-monitor/shared';
 import { checkDatabaseConnection, closeDatabaseConnection } from '@boat-monitor/database';
 import { checkQueueHealth, closeQueues } from './scheduler/queue';
 import { playwrightManager } from './scraper/playwright-manager';
 import { scheduleCronJobs } from './scheduler/cron';
+import { sendStartupNotification } from './services/startup-notification';
 import './scheduler/monitor-job'; // Initialize worker
 
 const logger = createModuleLogger('Monitor');
@@ -31,6 +35,9 @@ async function startMonitor() {
 
     logger.info('Boat Slip Monitor started successfully');
     logger.info('System is now monitoring for changes...');
+
+    // Send startup notification
+    await sendStartupNotification();
   } catch (error) {
     logger.error('Failed to start monitor', { error });
     process.exit(1);

@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Monitored URLs table
-CREATE TABLE monitored_urls (
+CREATE TABLE IF NOT EXISTS monitored_urls (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     url VARCHAR(1000) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
@@ -17,10 +17,10 @@ CREATE TABLE monitored_urls (
 );
 
 -- Create index on enabled URLs
-CREATE INDEX idx_monitored_urls_enabled ON monitored_urls(enabled) WHERE enabled = true;
+CREATE INDEX IF NOT EXISTS idx_monitored_urls_enabled ON monitored_urls(enabled) WHERE enabled = true;
 
 -- Checks table
-CREATE TABLE checks (
+CREATE TABLE IF NOT EXISTS checks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     url_id UUID NOT NULL REFERENCES monitored_urls(id) ON DELETE CASCADE,
     status VARCHAR(50) NOT NULL,
@@ -33,12 +33,12 @@ CREATE TABLE checks (
 );
 
 -- Create indexes for checks
-CREATE INDEX idx_checks_url_id ON checks(url_id);
-CREATE INDEX idx_checks_checked_at ON checks(checked_at DESC);
-CREATE INDEX idx_checks_html_hash ON checks(html_hash);
+CREATE INDEX IF NOT EXISTS idx_checks_url_id ON checks(url_id);
+CREATE INDEX IF NOT EXISTS idx_checks_checked_at ON checks(checked_at DESC);
+CREATE INDEX IF NOT EXISTS idx_checks_html_hash ON checks(html_hash);
 
 -- HTML Snapshots table
-CREATE TABLE html_snapshots (
+CREATE TABLE IF NOT EXISTS html_snapshots (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     check_id UUID NOT NULL REFERENCES checks(id) ON DELETE CASCADE,
     html_hash VARCHAR(64) NOT NULL UNIQUE,
@@ -48,10 +48,10 @@ CREATE TABLE html_snapshots (
 );
 
 -- Create index on html_hash
-CREATE INDEX idx_html_snapshots_hash ON html_snapshots(html_hash);
+CREATE INDEX IF NOT EXISTS idx_html_snapshots_hash ON html_snapshots(html_hash);
 
 -- Changes table
-CREATE TABLE changes (
+CREATE TABLE IF NOT EXISTS changes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     check_id UUID NOT NULL REFERENCES checks(id) ON DELETE CASCADE,
     url_id UUID NOT NULL REFERENCES monitored_urls(id) ON DELETE CASCADE,
@@ -65,12 +65,12 @@ CREATE TABLE changes (
 );
 
 -- Create indexes for changes
-CREATE INDEX idx_changes_url_id ON changes(url_id);
-CREATE INDEX idx_changes_priority ON changes(priority);
-CREATE INDEX idx_changes_detected_at ON changes(detected_at DESC);
+CREATE INDEX IF NOT EXISTS idx_changes_url_id ON changes(url_id);
+CREATE INDEX IF NOT EXISTS idx_changes_priority ON changes(priority);
+CREATE INDEX IF NOT EXISTS idx_changes_detected_at ON changes(detected_at DESC);
 
 -- Screenshots table
-CREATE TABLE screenshots (
+CREATE TABLE IF NOT EXISTS screenshots (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     check_id UUID NOT NULL REFERENCES checks(id) ON DELETE CASCADE,
     file_path VARCHAR(500) NOT NULL,
@@ -81,10 +81,10 @@ CREATE TABLE screenshots (
 );
 
 -- Create index on check_id
-CREATE INDEX idx_screenshots_check_id ON screenshots(check_id);
+CREATE INDEX IF NOT EXISTS idx_screenshots_check_id ON screenshots(check_id);
 
 -- Detected Forms table
-CREATE TABLE detected_forms (
+CREATE TABLE IF NOT EXISTS detected_forms (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     change_id UUID NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
     form_type VARCHAR(10) NOT NULL,
@@ -94,10 +94,10 @@ CREATE TABLE detected_forms (
 );
 
 -- Create index on change_id
-CREATE INDEX idx_detected_forms_change_id ON detected_forms(change_id);
+CREATE INDEX IF NOT EXISTS idx_detected_forms_change_id ON detected_forms(change_id);
 
 -- Notifications table
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     change_id UUID NOT NULL REFERENCES changes(id) ON DELETE CASCADE,
     channel VARCHAR(50) NOT NULL,
@@ -112,12 +112,12 @@ CREATE TABLE notifications (
 );
 
 -- Create indexes for notifications
-CREATE INDEX idx_notifications_change_id ON notifications(change_id);
-CREATE INDEX idx_notifications_status ON notifications(status);
-CREATE INDEX idx_notifications_created_at ON notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_change_id ON notifications(change_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_status ON notifications(status);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
 
 -- Notification Channels table
-CREATE TABLE notification_channels (
+CREATE TABLE IF NOT EXISTS notification_channels (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     channel VARCHAR(50) NOT NULL UNIQUE,
     enabled BOOLEAN NOT NULL DEFAULT true,
@@ -128,7 +128,7 @@ CREATE TABLE notification_channels (
 );
 
 -- User Settings table
-CREATE TABLE user_settings (
+CREATE TABLE IF NOT EXISTS user_settings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     key VARCHAR(100) NOT NULL UNIQUE,
     value TEXT NOT NULL,
@@ -138,7 +138,7 @@ CREATE TABLE user_settings (
 );
 
 -- System Metrics table
-CREATE TABLE system_metrics (
+CREATE TABLE IF NOT EXISTS system_metrics (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     metric_name VARCHAR(100) NOT NULL,
     metric_value DOUBLE PRECISION NOT NULL,
@@ -148,11 +148,10 @@ CREATE TABLE system_metrics (
 );
 
 -- Create index on metric_name and recorded_at
-CREATE INDEX idx_system_metrics_name_time ON system_metrics(metric_name, recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_system_metrics_name_time ON system_metrics(metric_name, recorded_at DESC);
 
 -- Seed initial monitored URLs
 INSERT INTO monitored_urls (url, name, description) VALUES
-('https://www.konstanz.de/stadt+gestalten/bauen+_+wohnen/privat+bauen/bootsliegeplatz', 'Konstanz Bootsliegeplatz', 'Main city of Konstanz boat slip page'),
-('https://www.konstanz.de/serviceportal/-/leistungen+von+a-z/neubeantragung-bootsliegeplatz-bootsliegeplaetze/vbid6001501', 'Konstanz Serviceportal', 'Konstanz service portal boat slip application'),
-('https://www.service-bw.de/zufi/leistungen/6001501?plz=78467&ags=08335043', 'Service-BW Leistungen', 'Baden-Württemberg service portal boat slip info'),
-('https://www.service-bw.de/onlineantraege/onlineantrag?processInstanceId=AZwTjGSsczqMBp3WMQZbUg', 'Service-BW Online Antrag', 'Baden-Württemberg online application form');
+('https://www.konstanz.de/stadt+gestalten/bauen+_+wohnen/privat+bauen/bootsliegeplatz', 'Konstanz Bootsliegeplatz', 'Hauptseite der Stadt Konstanz für Bootsliegeplätze'),
+('https://www.konstanz.de/serviceportal/-/leistungen+von+a-z/neubeantragung-bootsliegeplatz-bootsliegeplaetze/vbid6001501', 'Konstanz Serviceportal', 'Serviceportal der Stadt Konstanz für Bootsliegeplatz-Antrag')
+ON CONFLICT (url) DO NOTHING;

@@ -8,19 +8,16 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const urlId = searchParams.get('urlId');
     const limit = parseInt(searchParams.get('limit') || '100', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     let checks;
     if (urlId) {
       checks = await checksRepo.findByUrlId(urlId, limit);
     } else {
-      checks = await checksRepo.findRecent(limit);
+      checks = await checksRepo.findRecent(limit, offset);
     }
 
-    return NextResponse.json({
-      success: true,
-      data: checks,
-      count: checks.length
-    });
+    return NextResponse.json(checks);
   } catch (error) {
     return NextResponse.json(
       {

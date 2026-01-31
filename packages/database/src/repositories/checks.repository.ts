@@ -32,13 +32,36 @@ export class ChecksRepository {
     return results.map(this.mapToCheckResult);
   }
 
-  async findRecent(limit: number = 100): Promise<CheckResult[]> {
+  async findRecent(limit: number = 100, offset: number = 0): Promise<CheckResult[]> {
+    const { monitoredUrls, changes } = await import('../schema');
     const results = await db
-      .select()
+      .select({
+        check: checks,
+        url: monitoredUrls.url,
+        urlName: monitoredUrls.name,
+        changePriority: changes.priority
+      })
       .from(checks)
+      .leftJoin(monitoredUrls, eq(checks.urlId, monitoredUrls.id))
+      .leftJoin(changes, eq(changes.checkId, checks.id))
       .orderBy(desc(checks.checkedAt))
-      .limit(limit);
-    return results.map(this.mapToCheckResult);
+      .limit(limit)
+      .offset(offset);
+
+    // Deduplicate by check ID (in case of multiple changes per check)
+    const uniqueChecks = new Map<string, any>();
+    for (const r of results) {
+      if (!uniqueChecks.has(r.check.id)) {
+        uniqueChecks.set(r.check.id, {
+          ...this.mapToCheckResult(r.check),
+          url: r.url || '',
+          urlName: r.urlName || '',
+          changePriority: r.changePriority || null
+        });
+      }
+    }
+
+    return Array.from(uniqueChecks.values());
   }
 
   async getMetricsByUrlId(urlId: string) {
