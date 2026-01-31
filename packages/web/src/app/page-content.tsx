@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Activity, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Globe, TrendingUp } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Globe, TrendingUp, ExternalLink } from 'lucide-react';
 import type { MonitoredUrl, CheckResult, ChangeDetection } from '@boat-monitor/shared';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -196,7 +196,15 @@ function URLCard({ url, index }: { url: MonitoredUrl; index: number }) {
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex-1 space-y-2">
           <h4 className="font-semibold text-slate-900 dark:text-white">{url.name}</h4>
-          <p className="text-sm text-slate-600 dark:text-slate-400 truncate">{url.url}</p>
+          <a
+            href={url.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-400 hover:underline truncate transition-colors"
+          >
+            <span className="truncate">{url.url}</span>
+            <ExternalLink className="h-3 w-3 flex-shrink-0" />
+          </a>
           {url.lastChecked && (
             <p className="text-xs text-slate-500 dark:text-slate-500">
               Zuletzt geprüft: {new Date(url.lastChecked).toLocaleString('de-DE')}
@@ -265,9 +273,16 @@ function CheckCard({ check, index, recentChanges }: { check: CheckResult; index:
                 })}
               </span>
             </div>
-            <span className="text-xs text-slate-500 dark:text-slate-400 truncate block max-w-md">
-              {(check as any).url}
-            </span>
+            <a
+              href={(check as any).url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-400 hover:underline truncate max-w-md transition-colors"
+            >
+              <span className="truncate">{(check as any).url}</span>
+              <ExternalLink className="h-3 w-3 flex-shrink-0" />
+            </a>
           </div>
         </div>
         <div className="flex items-center space-x-2">

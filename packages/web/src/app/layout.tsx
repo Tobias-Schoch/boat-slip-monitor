@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { Anchor, LayoutDashboard, Settings, Globe } from 'lucide-react';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -21,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="de" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 transition-colors duration-500">
             {/* Animated background blobs */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -49,7 +48,6 @@ export default function RootLayout({
                     <NavLink href="/" icon={LayoutDashboard}>Dashboard</NavLink>
                     <NavLink href="/urls" icon={Globe}>URLs</NavLink>
                     <NavLink href="/settings" icon={Settings}>Einstellungen</NavLink>
-                    <ThemeToggle />
                   </div>
                 </div>
               </div>
