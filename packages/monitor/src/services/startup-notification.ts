@@ -6,7 +6,6 @@ import { emailChannel } from '../notifier/channels/email';
 const logger = createModuleLogger('StartupNotification');
 
 export async function sendStartupNotification(): Promise<void> {
-  logger.info('Sending startup notifications...');
 
   try {
     // Check if channels are configured (have credentials)
@@ -31,7 +30,6 @@ export async function sendStartupNotification(): Promise<void> {
       try {
         const result = await telegramChannel.send(startupPayload);
         if (result.success) {
-          logger.info('Startup notification sent via Telegram');
         } else {
           logger.error('Failed to send Telegram startup notification', { error: result.error });
         }
@@ -45,7 +43,6 @@ export async function sendStartupNotification(): Promise<void> {
       try {
         const result = await emailChannel.send(startupPayload);
         if (result.success) {
-          logger.info('Startup notification sent via Email');
         } else {
           logger.error('Failed to send Email startup notification', { error: result.error });
         }
@@ -58,7 +55,6 @@ export async function sendStartupNotification(): Promise<void> {
       logger.warn('No notification channels enabled - skipping startup notification');
     }
 
-    logger.info('Startup notifications completed');
   } catch (error) {
     logger.error('Failed to send startup notifications', { error });
   }

@@ -22,7 +22,6 @@ export class ChangeDetector {
   ): Promise<ChangeComparisonResult> {
     // First check - don't trigger critical alerts
     if (!previousHtmlNormalized) {
-      logger.info('First check - no previous HTML (skipping critical keyword/form detection)');
       return {
         hasChanged: false,
         type: null,
@@ -32,21 +31,12 @@ export class ChangeDetector {
       };
     }
 
-    logger.info('Analyzing content for changes (with previous data)');
-
     // Use hash comparison instead of Levenshtein (prevents memory issues with large HTML)
     const hasSignificantChange = previousHtmlHash !== currentHtmlHash;
     const similarity = hasSignificantChange ? 0.0 : 1.0;
 
-    logger.info('Hash comparison result', {
-      previousHash: previousHtmlHash?.substring(0, 8),
-      currentHash: currentHtmlHash?.substring(0, 8),
-      hasChanged: hasSignificantChange
-    });
-
     // Only check for forms/keywords if there's an actual content change
     if (hasSignificantChange) {
-      logger.info('Content change detected, checking for forms and keywords', { similarity });
 
       // Check for form detection first (highest priority)
       const currentFormDetection = this.detectForms(currentHtml);
@@ -67,8 +57,6 @@ export class ChangeDetector {
             description,
             diff: this.generateDiff(previousHtmlOriginal || previousHtmlNormalized, currentHtml)
           };
-        } else {
-          logger.info('Form detected but was already present in previous HTML');
         }
       }
 
@@ -95,19 +83,12 @@ export class ChangeDetector {
             matchedKeywords: newKeywords,
             diff: this.generateDiff(previousHtmlOriginal || previousHtmlNormalized, currentHtml)
           };
-        } else {
-          logger.info('Keywords found but were already present in previous HTML', {
-            keywords: currentKeywordMatch.keywords
-          });
         }
       }
-    } else {
-      logger.info('No content change detected - skipping form/keyword checks', { similarity });
     }
 
     // If we reach here and there was a significant change, it's a regular content change
     if (hasSignificantChange) {
-      logger.info('Regular content change detected (no critical keywords/forms)', { similarity });
       return {
         hasChanged: true,
         type: ChangeType.CONTENT,
@@ -118,7 +99,6 @@ export class ChangeDetector {
       };
     }
 
-    logger.info('No significant changes detected', { similarity });
     return {
       hasChanged: false,
       type: null,
@@ -287,8 +267,6 @@ export class ChangeDetector {
           });
         }
       }
-
-      logger.info(`Extracted ${fields.length} form fields`);
     } catch (error) {
       logger.error('Failed to extract form fields', { error });
     }

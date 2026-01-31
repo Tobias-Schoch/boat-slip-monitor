@@ -23,8 +23,6 @@ export class PageScraper {
     let page: Page | null = null;
 
     try {
-      logger.info('Starting page scrape', { url });
-
       const result = await retry(
         async () => {
           page = await playwrightManager.newPage();
@@ -40,7 +38,6 @@ export class PageScraper {
       );
 
       const responseTime = Date.now() - startTime;
-      logger.info('Page scrape completed', { url, responseTime });
 
       return {
         ...result,
@@ -190,7 +187,6 @@ export class PageScraper {
 
       // Return absolute path so it can be accessed from other packages
       const absolutePath = path.resolve(filePath);
-      logger.info('Screenshot saved', { filePath: absolutePath });
       return absolutePath;
     } catch (error) {
       logger.error('Failed to take screenshot', { error });

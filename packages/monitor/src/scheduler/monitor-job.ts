@@ -39,8 +39,6 @@ export const monitorWorker = new Worker<CheckJobData>(
   async (job: Job<CheckJobData>) => {
     const { urlId, url } = job.data;
 
-    logger.info('Starting check job', { urlId, url });
-
     try {
       // Scrape the page
       const scrapeResult = await pageScraper.scrape(url);
@@ -84,7 +82,6 @@ export const monitorWorker = new Worker<CheckJobData>(
             width: 1920, // Default viewport width from scraper
             height: 1080 // Approximate height
           });
-          logger.info('Screenshot saved to database', { path: scrapeResult.screenshotPath });
         } catch (error) {
           logger.error('Failed to save screenshot to database', { error });
         }
@@ -116,14 +113,8 @@ export const monitorWorker = new Worker<CheckJobData>(
             previousHtmlNormalized = previousSnapshot[0].normalizedContent;
             previousHtmlOriginal = previousSnapshot[0].content;
             previousHtmlHash = previousCheck.htmlHash;
-            logger.info('Found previous HTML snapshot', {
-              previousHash: previousCheck.htmlHash,
-              currentHash: scrapeResult.htmlHash
-            });
           }
         }
-      } else {
-        logger.info('First check for this URL - no previous HTML', { urlId });
       }
 
       // Store new HTML snapshot if hash is different
@@ -140,9 +131,6 @@ export const monitorWorker = new Worker<CheckJobData>(
           content: scrapeResult.html,
           normalizedContent: scrapeResult.normalizedHtml
         });
-        logger.info('New HTML snapshot stored', { htmlHash: scrapeResult.htmlHash });
-      } else {
-        logger.info('HTML snapshot already exists', { htmlHash: scrapeResult.htmlHash });
       }
 
       // Detect changes
@@ -187,11 +175,15 @@ export const monitorWorker = new Worker<CheckJobData>(
             matchedKeywords: changeResult.matchedKeywords
           }
         });
-
-        logger.info('Notifications dispatched', { changeId: change.id });
       }
 
-      logger.info('Check job completed', { urlId, url, hasChanged: changeResult.hasChanged });
+      if (changeResult.hasChanged) {
+        logger.info('Change detected', {
+          url,
+          type: changeResult.type,
+          priority: changeResult.priority
+        });
+      }
 
       return {
         success: true,
@@ -225,12 +217,6 @@ export const monitorWorker = new Worker<CheckJobData>(
   }
 );
 
-monitorWorker.on('completed', (job) => {
-  logger.info('Job completed', { jobId: job.id });
-});
-
 monitorWorker.on('failed', (job, error) => {
   logger.error('Job failed', { jobId: job?.id, error });
 });
-
-logger.info('Monitor worker initialized');

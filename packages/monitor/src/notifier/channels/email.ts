@@ -32,8 +32,7 @@ class EmailChannel {
       this.fromEmail = config.from;
       this.toEmail = config.to;
       this.initialized = true;
-      logger.info('Email transporter initialized from database');
-    } else {
+    } else{
       logger.warn('Email not configured in database');
     }
   }
@@ -73,10 +72,6 @@ class EmailChannel {
         subject: `[${payload.priority}] ${payload.title}`,
         html,
         attachments
-      });
-
-      logger.info('Email notification sent', {
-        messageId: info.messageId
       });
 
       return {

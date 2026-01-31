@@ -15,11 +15,6 @@ interface DispatchPayload extends NotificationPayload {
 
 class NotificationDispatcher {
   async dispatch(payload: DispatchPayload): Promise<void> {
-    logger.info('Dispatching notifications', {
-      changeId: payload.changeId,
-      priority: payload.priority
-    });
-
     // Check if channels are configured (have credentials)
     const telegramToken = await settingsService.get('telegram_bot_token');
     const telegramChatId = await settingsService.get('telegram_chat_id');
@@ -29,16 +24,10 @@ class NotificationDispatcher {
     const telegramEnabled = !!(telegramToken && telegramChatId);
     const emailEnabled = !!(smtpUser && smtpFrom);
 
-    logger.info('Notification channels status', {
-      telegramEnabled,
-      emailEnabled
-    });
-
     const results: Promise<any>[] = [];
 
     // Send to Telegram if configured
     if (telegramEnabled) {
-      logger.info('Sending Telegram notification');
       results.push(
         telegramChannel.send(payload).catch(error => {
           logger.error('Telegram notification failed', { error });
@@ -49,7 +38,6 @@ class NotificationDispatcher {
 
     // Send to Email if configured
     if (emailEnabled) {
-      logger.info('Sending Email notification');
       results.push(
         emailChannel.send(payload).catch(error => {
           logger.error('Email notification failed', { error });
@@ -64,16 +52,7 @@ class NotificationDispatcher {
     }
 
     // Wait for all notifications to complete
-    const outcomes = await Promise.allSettled(results);
-
-    const successful = outcomes.filter(o => o.status === 'fulfilled').length;
-    const failed = outcomes.filter(o => o.status === 'rejected').length;
-
-    logger.info('Notifications dispatched', {
-      successful,
-      failed,
-      total: outcomes.length
-    });
+    await Promise.allSettled(results);
   }
 }
 

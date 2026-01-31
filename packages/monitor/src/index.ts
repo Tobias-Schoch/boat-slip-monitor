@@ -13,8 +13,6 @@ const logger = createModuleLogger('Monitor');
 
 async function startMonitor() {
   try {
-    logger.info('Starting Boat Slip Monitor...');
-
     // Check database connection
     const dbHealthy = await checkDatabaseConnection();
     if (!dbHealthy) {
@@ -33,9 +31,6 @@ async function startMonitor() {
     // Schedule cron jobs
     await scheduleCronJobs();
 
-    logger.info('Boat Slip Monitor started successfully');
-    logger.info('System is now monitoring for changes...');
-
     // Send startup notification
     await sendStartupNotification();
   } catch (error) {
@@ -46,13 +41,10 @@ async function startMonitor() {
 
 async function stopMonitor() {
   try {
-    logger.info('Stopping Boat Slip Monitor...');
-
     await playwrightManager.close();
     await closeQueues();
     await closeDatabaseConnection();
 
-    logger.info('Boat Slip Monitor stopped');
     process.exit(0);
   } catch (error) {
     logger.error('Error stopping monitor', { error });

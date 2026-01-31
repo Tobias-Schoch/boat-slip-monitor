@@ -61,7 +61,6 @@ export const notificationQueue = new Queue('notification-queue', {
 export async function checkQueueHealth(): Promise<boolean> {
   try {
     await connection.ping();
-    logger.info('Queue connection healthy');
     return true;
   } catch (error) {
     logger.error('Queue connection failed', { error });
@@ -75,13 +74,7 @@ export async function closeQueues(): Promise<void> {
     await checkQueue.close();
     await notificationQueue.close();
     await connection.quit();
-    logger.info('Queues closed');
   } catch (error) {
     logger.error('Error closing queues', { error });
   }
 }
-
-logger.info('Queue initialized', {
-  host: REDIS_CONFIG.HOST,
-  port: REDIS_CONFIG.PORT
-});

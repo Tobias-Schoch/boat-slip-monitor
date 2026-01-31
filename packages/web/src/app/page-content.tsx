@@ -329,6 +329,18 @@ function CheckCard({ check, index, recentChanges }: { check: CheckResult; index:
             )}
           </div>
 
+          {/* Diff */}
+          {relatedChange.diff && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Änderungen</h4>
+              <div className="relative max-h-96 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <pre className="p-4 text-xs font-mono whitespace-pre-wrap break-words">
+                  {relatedChange.diff}
+                </pre>
+              </div>
+            </div>
+          )}
+
           {/* Screenshot */}
           {check.screenshotPath && (
             <div className="space-y-2">

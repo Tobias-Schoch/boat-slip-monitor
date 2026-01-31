@@ -22,7 +22,6 @@ class TelegramChannel {
       this.bot = new TelegramBot(config.token, { polling: false });
       this.chatId = config.chatId;
       this.initialized = true;
-      logger.info('Telegram bot initialized from database');
     } else {
       logger.warn('Telegram bot not configured in database');
     }
@@ -71,10 +70,6 @@ class TelegramChannel {
           logger.warn('Failed to send screenshot', { error });
         }
       }
-
-      logger.info('Telegram notification sent', {
-        messageId: sentMessage.message_id
-      });
 
       return {
         success: true,

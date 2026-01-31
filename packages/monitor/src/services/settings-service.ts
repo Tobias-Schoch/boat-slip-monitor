@@ -54,7 +54,6 @@ export class SettingsService {
   async set(key: string, value: string): Promise<void> {
     await this.settingsRepo.updateValue(key, value);
     this.cache.set(key, value);
-    logger.info(`Setting updated: ${key}`);
   }
 
   /**

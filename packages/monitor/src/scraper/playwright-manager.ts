@@ -10,7 +10,6 @@ export class PlaywrightManager {
 
   async initialize(): Promise<void> {
     try {
-      logger.info('Initializing Playwright browser...');
 
       this.browser = await chromium.launch({
         headless: true,
@@ -28,7 +27,6 @@ export class PlaywrightManager {
         this.contexts.push(context);
       }
 
-      logger.info(`Playwright initialized with ${this.poolSize} contexts`);
     } catch (error) {
       logger.error('Failed to initialize Playwright', { error });
       throw error;
@@ -109,7 +107,6 @@ export class PlaywrightManager {
 
   async close(): Promise<void> {
     try {
-      logger.info('Closing Playwright browser...');
 
       for (const context of this.contexts) {
         await context.close();
@@ -121,7 +118,6 @@ export class PlaywrightManager {
         this.browser = null;
       }
 
-      logger.info('Playwright browser closed');
     } catch (error) {
       logger.error('Error closing Playwright', { error });
     }

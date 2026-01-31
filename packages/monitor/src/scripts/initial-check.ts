@@ -13,7 +13,6 @@ import { sql } from 'drizzle-orm';
 const logger = createModuleLogger('initial-check');
 
 async function runInitialChecks() {
-  logger.info('Starting initial checks for all URLs...');
 
   const urlsRepo = new MonitoredUrlsRepository();
   const checksRepo = new ChecksRepository();
@@ -26,11 +25,9 @@ async function runInitialChecks() {
 
     // Get all enabled URLs
     const urls = await urlsRepo.findEnabled();
-    logger.info(`Found ${urls.length} URLs to check`);
 
     for (const url of urls) {
       try {
-        logger.info(`Checking URL: ${url.name} (${url.url})`);
 
         const result = await scraper.scrape(url.url);
 
@@ -45,7 +42,6 @@ async function runInitialChecks() {
             screenshotPath: result.screenshotPath
           });
 
-          logger.info(`Check created: ${check.id}`);
 
           // Save HTML snapshot directly with SQL
           await db.execute(sql`
@@ -54,7 +50,6 @@ async function runInitialChecks() {
             ON CONFLICT (html_hash) DO NOTHING
           `);
 
-          logger.info(`HTML snapshot saved with hash: ${result.htmlHash}`);
 
           // Save screenshot metadata directly with SQL
           if (result.screenshotPath && fs.existsSync(result.screenshotPath)) {
@@ -64,7 +59,6 @@ async function runInitialChecks() {
               VALUES (uuid_generate_v4(), ${check.id}, ${result.screenshotPath}, ${stats.size}, 1920, 1080, NOW())
             `);
 
-            logger.info(`Screenshot saved: ${result.screenshotPath}`);
           }
 
           // Create initial state change
@@ -77,7 +71,6 @@ async function runInitialChecks() {
             description: `Initialer Stand der Seite "${url.name}" erfasst`
           });
 
-          logger.info(`Initial state change created for ${url.name}`);
 
           // Update last checked time
           await urlsRepo.updateLastChecked(url.id);
@@ -106,7 +99,6 @@ async function runInitialChecks() {
       }
     }
 
-    logger.info('Initial checks completed successfully');
 
   } catch (error) {
     logger.error('Initial checks failed:', error);
@@ -138,7 +130,6 @@ function normalizeHtml(html: string): string {
 if (require.main === module) {
   runInitialChecks()
     .then(() => {
-      logger.info('Done!');
       process.exit(0);
     })
     .catch((error) => {
