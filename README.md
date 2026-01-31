@@ -23,28 +23,59 @@ A robust 24/7 monitoring system that watches the boat slip waiting list in Konst
 ### Prerequisites
 
 - Node.js 20+
-- PostgreSQL 16+
-- Redis 7+
-- Docker & Docker Compose (for production)
+- Docker & Docker Compose
+- Telegram account (for notifications)
 
-### Installation
+### Easy Setup (Interactive)
+
+Run the interactive setup script that will guide you through the entire configuration:
 
 ```bash
+cd boat-slip-monitor
+./scripts/setup.sh
+```
+
+This will:
+1. **Prompt you for all credentials** (Telegram, Email, SMS, etc.)
+2. **Generate your .env file** automatically
+3. Install dependencies
+4. Build all packages
+5. Start PostgreSQL and Redis
+6. Run database migrations
+7. Create required directories
+
+**Note**: Only Telegram credentials are required. All other notification channels are optional and can be skipped.
+
+### Manual Setup (Advanced)
+
+If you prefer manual configuration:
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit with your credentials
+nano .env
+
 # Install dependencies
 npm install
 
-# Copy environment variables
-cp .env.example .env
-# Edit .env with your credentials
-
-# Build all packages
+# Build packages
 npm run build
 
-# Run database migrations
-npm run migrate
+# Start services
+docker-compose up -d postgres redis
 
-# Start development servers
-npm run dev
+# Run migrations
+npm run migrate
+```
+
+### Reconfigure Credentials
+
+To update credentials later without re-running full setup:
+
+```bash
+./scripts/configure-credentials.sh
 ```
 
 ### Development
@@ -80,6 +111,50 @@ boat-slip-monitor/
 - https://www.konstanz.de/serviceportal/-/leistungen+von+a-z/neubeantragung-bootsliegeplatz-bootsliegeplaetze/vbid6001501
 - https://www.service-bw.de/zufi/leistungen/6001501?plz=78467&ags=08335043
 - https://www.service-bw.de/onlineantraege/onlineantrag?processInstanceId=AZwTjGSsczqMBp3WMQZbUg
+
+## Credential Setup
+
+### Telegram (Required)
+
+1. **Create a bot**:
+   - Message [@BotFather](https://t.me/botfather) on Telegram
+   - Send `/newbot` and follow instructions
+   - Copy the bot token
+
+2. **Get your Chat ID**:
+   - Message your new bot
+   - Visit: `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates`
+   - Find `chat` → `id` in the response
+
+### Email (Optional)
+
+For Gmail:
+1. Enable 2-Factor Authentication
+2. Go to https://myaccount.google.com/apppasswords
+3. Create an app password for "Mail"
+4. Use this password in the setup (not your regular Gmail password)
+
+### SMS/Voice (Optional)
+
+1. Sign up at https://www.twilio.com
+2. Verify your phone number
+3. Get Account SID and Auth Token from dashboard
+4. Purchase a Twilio phone number
+
+### Test Notifications
+
+After setup, test your notification channels:
+
+```bash
+# Test Telegram
+./scripts/test-notification.sh telegram
+
+# Test Email (if configured)
+./scripts/test-notification.sh email
+
+# Test SMS (if configured)
+./scripts/test-notification.sh sms
+```
 
 ## Deployment
 
