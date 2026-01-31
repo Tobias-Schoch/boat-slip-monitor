@@ -1,0 +1,28 @@
+{
+  "name": "boat-slip-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "24/7 Monitoring system for boat slip waiting list in Konstanz",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "test": "turbo run test",
+    "migrate": "npm run migrate --workspace=@boat-monitor/database",
+    "monitor": "npm run dev --workspace=@boat-monitor/monitor",
+    "web": "npm run dev --workspace=@boat-monitor/web"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.0",
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
