@@ -14,7 +14,14 @@
     "sourceMap": true,
     "composite": true,
     "incremental": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@boat-monitor/shared": ["./packages/shared/src"],
+      "@boat-monitor/database": ["./packages/database/src"],
+      "@boat-monitor/monitor": ["./packages/monitor/src"],
+      "@boat-monitor/web": ["./packages/web/src"]
+    }
   },
   "exclude": ["node_modules", "dist"]
 }
