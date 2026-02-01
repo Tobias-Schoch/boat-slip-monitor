@@ -57,8 +57,8 @@ COPY --from=builder --chown=monitor:nodejs /app/packages/shared/dist ./packages/
 COPY --from=builder --chown=monitor:nodejs /app/packages/database/dist ./packages/database/dist
 COPY --from=builder --chown=monitor:nodejs /app/packages/monitor/dist ./packages/monitor/dist
 
-# Copy Playwright browsers
-COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
+# Copy Playwright browsers to monitor user's home
+COPY --from=builder --chown=monitor:nodejs /root/.cache/ms-playwright /home/monitor/.cache/ms-playwright
 
 # Create directories
 RUN mkdir -p /app/data/screenshots /app/logs
