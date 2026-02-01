@@ -77,12 +77,12 @@ export function PageContent({ urls, recentChecks, recentChanges }: {
       className="space-y-8"
     >
       {/* Hero Section */}
-      <motion.div variants={item} className="text-center space-y-4">
-        <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
+      <motion.div variants={item} className="text-center space-y-2 sm:space-y-4">
+        <h2 className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
           Dashboard
         </h2>
-        <p className="text-lg text-slate-600 dark:text-slate-400">
-          24/7 Überwachung der Bootsliegeplatz-Warteliste in Konstanz
+        <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-400 px-4">
+          24/7 Überwachung der Bootsliegeplatz-Warteliste
         </p>
       </motion.div>
 
@@ -113,12 +113,12 @@ export function PageContent({ urls, recentChecks, recentChanges }: {
 
       {/* Monitored URLs */}
       <motion.div variants={item}>
-        <div className="backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-2xl shadow-blue-500/10 p-6 space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/50">
-              <Globe className="h-5 w-5 text-white" />
+        <div className="backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 rounded-xl sm:rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-2xl shadow-blue-500/10 p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/50">
+              <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Überwachte URLs</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Überwachte URLs</h3>
           </div>
           <div className="space-y-3">
             {urls.map((url, index) => (
@@ -130,12 +130,12 @@ export function PageContent({ urls, recentChecks, recentChanges }: {
 
       {/* All Checks with Infinite Scroll */}
       <motion.div variants={item}>
-        <div className="backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-2xl shadow-cyan-500/10 p-6 space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/50">
-              <Activity className="h-5 w-5 text-white" />
+        <div className="backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 rounded-xl sm:rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-2xl shadow-cyan-500/10 p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/50">
+              <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Alle Prüfungen</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Alle Prüfungen</h3>
           </div>
           <div className="space-y-2">
             {checks.map((check, index) => (
@@ -166,17 +166,17 @@ function StatCard({ icon: Icon, label, value, gradient, iconColor }: any) {
   return (
     <motion.div
       whileHover={{ scale: 1.05, y: -5 }}
-      className="group relative overflow-hidden backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-xl p-6"
+      className="group relative overflow-hidden backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 rounded-xl sm:rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-xl p-4 sm:p-6"
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-      <div className="relative z-10 space-y-3">
+      <div className="relative z-10 space-y-2 sm:space-y-3">
         <div className="flex items-center justify-between">
-          <Icon className={`h-8 w-8 ${iconColor}`} />
-          <div className={`p-2 rounded-xl bg-gradient-to-br ${gradient} opacity-10`} />
+          <Icon className={`h-6 w-6 sm:h-8 sm:w-8 ${iconColor}`} />
+          <div className={`p-1.5 sm:p-2 rounded-xl bg-gradient-to-br ${gradient} opacity-10`} />
         </div>
         <div>
-          <p className="text-sm text-slate-600 dark:text-slate-400">{label}</p>
-          <p className="text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">{label}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
         </div>
       </div>
     </motion.div>
@@ -256,17 +256,17 @@ function CheckCard({ check, index, recentChanges }: { check: CheckResult; index:
     >
       {/* Main Check Info */}
       <div
-        className="flex items-center justify-between py-3 px-4 cursor-pointer"
+        className="flex items-start sm:items-center justify-between py-3 px-3 sm:px-4 cursor-pointer gap-2"
         onClick={() => relatedChange && setIsOpen(!isOpen)}
       >
-        <div className="flex items-center space-x-3 flex-1">
-          <div className={`w-2 h-2 ${dotColor} rounded-full shadow-lg animate-pulse`} />
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-slate-900 dark:text-white">
+        <div className="flex items-start space-x-2 sm:space-x-3 flex-1 min-w-0">
+          <div className={`w-2 h-2 mt-1 sm:mt-0 ${dotColor} rounded-full shadow-lg animate-pulse flex-shrink-0`} />
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+              <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
                 {(check as any).urlName || 'Unbekannte URL'}
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-500">
+              <span className="text-xs text-slate-500 dark:text-slate-500 whitespace-nowrap">
                 {new Date(check.checkedAt).toLocaleString('de-DE', {
                   hour: '2-digit',
                   minute: '2-digit'
@@ -278,17 +278,19 @@ function CheckCard({ check, index, recentChanges }: { check: CheckResult; index:
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-400 hover:underline truncate max-w-md transition-colors"
+              className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-400 hover:underline transition-colors"
             >
-              <span className="truncate">{(check as any).url}</span>
+              <span className="truncate block max-w-[250px] sm:max-w-md">{(check as any).url}</span>
               <ExternalLink className="h-3 w-3 flex-shrink-0" />
             </a>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium text-slate-900 dark:text-white">{check.responseTime}ms</span>
-          <Activity className="h-4 w-4 text-cyan-500" />
-          {relatedChange && (isOpen ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />)}
+        <div className="flex flex-col sm:flex-row items-end sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 flex-shrink-0">
+          <span className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white whitespace-nowrap">{check.responseTime}ms</span>
+          <div className="flex items-center space-x-1">
+            <Activity className="h-4 w-4 text-cyan-500" />
+            {relatedChange && (isOpen ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />)}
+          </div>
         </div>
       </div>
 
@@ -333,8 +335,8 @@ function CheckCard({ check, index, recentChanges }: { check: CheckResult; index:
           {relatedChange.diff && (
             <div className="space-y-2">
               <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Änderungen</h4>
-              <div className="relative max-h-96 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
-                <pre className="p-4 text-xs font-mono whitespace-pre-wrap break-words">
+              <div className="relative max-h-64 sm:max-h-96 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <pre className="p-3 sm:p-4 text-[10px] sm:text-xs font-mono whitespace-pre-wrap break-words">
                   {relatedChange.diff}
                 </pre>
               </div>
@@ -345,7 +347,7 @@ function CheckCard({ check, index, recentChanges }: { check: CheckResult; index:
           {check.screenshotPath && (
             <div className="space-y-2">
               <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Screenshot</h4>
-              <div className="relative w-full h-64 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+              <div className="relative w-full h-48 sm:h-64 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
                 {imageError ? (
                   <div className="flex items-center justify-center h-full bg-slate-100 dark:bg-slate-800">
                     <p className="text-sm text-slate-500 dark:text-slate-400">Screenshot nicht verfügbar</p>
