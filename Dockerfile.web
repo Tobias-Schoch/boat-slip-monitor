@@ -51,7 +51,6 @@ RUN npm ci --only=production
 COPY --from=builder --chown=nextjs:nodejs /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder --chown=nextjs:nodejs /app/packages/database/dist ./packages/database/dist
 COPY --from=builder --chown=nextjs:nodejs /app/packages/web/.next ./packages/web/.next
-COPY --from=builder --chown=nextjs:nodejs /app/packages/web/public ./packages/web/public
 
 USER nextjs
 
