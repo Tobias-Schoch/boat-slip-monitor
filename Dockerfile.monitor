@@ -11,6 +11,8 @@ COPY package*.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/database/package.json ./packages/database/
 COPY packages/monitor/package.json ./packages/monitor/
+COPY turbo.json ./
+COPY tsconfig.json ./
 RUN npm ci
 
 # Install Playwright browsers and dependencies
@@ -21,6 +23,7 @@ RUN npx playwright install chromium
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package*.json ./
 COPY . .
 RUN npm run build
 
