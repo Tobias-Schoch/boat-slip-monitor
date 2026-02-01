@@ -4,22 +4,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Dependencies stage
-FROM base AS deps
-WORKDIR /app
-COPY package*.json ./
-COPY packages/shared/package.json ./packages/shared/
-COPY packages/database/package.json ./packages/database/
-COPY packages/web/package.json ./packages/web/
-COPY turbo.json ./
-COPY tsconfig.json ./
-RUN npm ci
-
 # Builder stage
 FROM base AS builder
 WORKDIR /app
+
+# Copy all source files first
 COPY . .
-COPY --from=deps /app/node_modules ./node_modules
+
+# Install dependencies (this creates proper workspace symlinks)
+RUN npm ci
+
+# Build all packages
 RUN npm run build
 
 # Runner stage
