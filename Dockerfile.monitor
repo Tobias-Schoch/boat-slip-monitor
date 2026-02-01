@@ -1,6 +1,8 @@
 # Base stage
-FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat
+FROM node:20-slim AS base
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 # Dependencies stage
 FROM base AS deps
@@ -11,7 +13,7 @@ COPY packages/database/package.json ./packages/database/
 COPY packages/monitor/package.json ./packages/monitor/
 RUN npm ci
 
-# Install Playwright browsers
+# Install Playwright browsers and dependencies
 RUN npx playwright install-deps chromium
 RUN npx playwright install chromium
 
@@ -28,8 +30,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 monitor
+RUN groupadd --system --gid 1001 nodejs
+RUN useradd --system --uid 1001 monitor
 
 # Copy built application
 COPY --from=builder --chown=monitor:nodejs /app/packages/shared/dist ./packages/shared/dist
