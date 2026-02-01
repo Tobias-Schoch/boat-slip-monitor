@@ -1,45 +1,57 @@
-# Base stage
-FROM node:20-slim AS base
+# Build stage
+FROM node:20-slim AS builder
+WORKDIR /app
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Builder stage
-FROM base AS builder
-WORKDIR /app
+# Copy package files
+COPY package*.json ./
+COPY turbo.json ./
+COPY tsconfig.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/database/package.json ./packages/database/
+COPY packages/web/package.json ./packages/web/
 
-# Copy all source files first
-COPY . .
-
-# Install dependencies (this creates proper workspace symlinks)
+# Install ALL dependencies
 RUN npm ci
 
-# Build packages sequentially to ensure proper dependency resolution
-RUN npm run build --workspace=@boat-monitor/shared && \
-    npm run build --workspace=@boat-monitor/database && \
-    npm run build --workspace=@boat-monitor/web
+# Copy source code
+COPY packages/shared ./packages/shared
+COPY packages/database ./packages/database
+COPY packages/web ./packages/web
 
-# Runner stage
-FROM base AS runner
+# Build with turbo
+RUN npm run build
+
+# Production stage
+FROM node:20-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN groupadd --system --gid 1001 nodejs
 RUN useradd --system --uid 1001 nextjs
 
-# Copy built application
-COPY --from=builder --chown=nextjs:nodejs /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder --chown=nextjs:nodejs /app/packages/shared/package.json ./packages/shared/
-COPY --from=builder --chown=nextjs:nodejs /app/packages/database/dist ./packages/database/dist
-COPY --from=builder --chown=nextjs:nodejs /app/packages/database/package.json ./packages/database/
-COPY --from=builder --chown=nextjs:nodejs /app/packages/web/.next ./packages/web/.next
-COPY --from=builder --chown=nextjs:nodejs /app/packages/web/package.json ./packages/web/
-COPY --from=builder --chown=nextjs:nodejs /app/packages/web/public ./packages/web/public
-COPY --from=builder --chown=nextjs:nodejs /app/package*.json ./
+# Copy package files
+COPY package*.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/database/package.json ./packages/database/
+COPY packages/web/package.json ./packages/web/
 
 # Install production dependencies
 RUN npm ci --only=production
+
+# Copy built code
+COPY --from=builder --chown=nextjs:nodejs /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=nextjs:nodejs /app/packages/database/dist ./packages/database/dist
+COPY --from=builder --chown=nextjs:nodejs /app/packages/web/.next ./packages/web/.next
+COPY --from=builder --chown=nextjs:nodejs /app/packages/web/public ./packages/web/public
 
 USER nextjs
 
