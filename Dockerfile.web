@@ -52,6 +52,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/packages/shared/dist ./packages/s
 COPY --from=builder --chown=nextjs:nodejs /app/packages/database/dist ./packages/database/dist
 COPY --from=builder --chown=nextjs:nodejs /app/packages/web/.next ./packages/web/.next
 
+# Create logs directory
+RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
+
 USER nextjs
 
 EXPOSE 3000
