@@ -11,7 +11,6 @@
 
 [Features](#-features) •
 [Quick Start](#-quick-start) •
-[Demo](#-demo) •
 [Documentation](#-documentation) •
 [Contributing](#-contributing)
 
@@ -89,50 +88,37 @@ Website Change Monitor is a **production-ready monitoring system** that tracks c
 ✓ Node.js 20+
 ✓ Docker Desktop
 ✓ Telegram account (for notifications)
-
-# Optional
-✓ Gmail (for email notifications)
-✓ Twilio (for SMS/voice)
 ```
 
-### Installation (2 minutes)
+### One-Command Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/website-change-monitor.git
-cd website-change-monitor
+git clone https://github.com/Tobias-Schoch/boat-slip-monitor.git
+cd boat-slip-monitor
 
 # Run automated setup
 ./scripts/quick-setup.sh
 ```
 
-The script will:
+The setup script will automatically:
 1. ✅ Create your `.env` file
 2. ✅ Start PostgreSQL & Redis
 3. ✅ Install dependencies
 4. ✅ Build all packages
 5. ✅ Run database migrations
 
-### Configuration (3 minutes)
+### Configure Telegram (2 minutes)
 
-**Get your Telegram bot token:**
+The setup script will guide you, or follow these steps:
 
-1. Open Telegram and message [@BotFather](https://t.me/botfather)
-2. Send `/newbot` and follow instructions
-3. Copy your bot token
-
-**Get your Chat ID:**
-
-1. Message your bot (any text)
-2. Visit: `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates`
-3. Find `"chat":{"id":123456789}`
-
-**Add to `.env`:**
-
-```bash
-TELEGRAM_BOT_TOKEN=1234567890:ABCdef...
-TELEGRAM_CHAT_ID=123456789
-```
+1. **Create bot**: Message [@BotFather](https://t.me/botfather) → `/newbot`
+2. **Get Chat ID**: Message your bot, then visit `https://api.telegram.org/bot<TOKEN>/getUpdates`
+3. **Add to `.env`**:
+   ```bash
+   TELEGRAM_BOT_TOKEN=your_token_here
+   TELEGRAM_CHAT_ID=your_chat_id_here
+   ```
 
 ### Start Monitoring
 
@@ -144,22 +130,7 @@ npm run monitor
 npm run web
 ```
 
-Open http://localhost:3000 and add your first URL! 🎉
-
-## 🎬 Demo
-
-<div align="center">
-
-### Dashboard
-![Dashboard](https://via.placeholder.com/800x400?text=Dashboard+Screenshot)
-
-### Telegram Notification
-![Telegram](https://via.placeholder.com/400x600?text=Telegram+Notification)
-
-### Email Notification
-![Email](https://via.placeholder.com/600x400?text=Email+Notification)
-
-</div>
+Open **http://localhost:3000** and add your first URL! 🎉
 
 ## 📚 Documentation
 
@@ -204,17 +175,13 @@ website-change-monitor/
 └── README.md            # You are here!
 ```
 
-### Configuration Options
+### Configuration
 
 #### Check Interval
 
-Configure how often to check each URL:
-
-```typescript
-// In dashboard: Settings → Check Interval (minutes)
-// Or in .env:
-CHECK_INTERVAL_MINUTES=5  // Default: 5 minutes
-```
+Set how often to check URLs:
+- Via Dashboard: **Settings** → **Check Interval (minutes)**
+- Default: 5 minutes
 
 #### Custom Keywords
 
@@ -241,30 +208,29 @@ export const IMPORTANT_KEYWORDS = [
 
 Then rebuild: `npm run build`
 
-### Adding URLs
+### Adding URLs to Monitor
 
-1. Open dashboard at http://localhost:3000
+1. Open dashboard at **http://localhost:3000**
 2. Click **"URLs"** tab
 3. Click **"Add URL"**
-4. Fill in:
-   - **Name**: Friendly identifier
-   - **URL**: Complete URL to monitor
-   - **Description**: What you're watching for
-   - **Check Interval**: Minutes between checks
-5. Click **"Save"**
+4. Fill in details and save
 
-The monitor will automatically start checking your URL!
+The monitor will automatically start checking!
 
 ## 🐳 Docker Deployment
 
 ### Quick Deploy
 
 ```bash
-# Configure environment
-cp .env.example .env
-nano .env
+# Clone and setup
+git clone https://github.com/Tobias-Schoch/boat-slip-monitor.git
+cd boat-slip-monitor
 
-# Start all services
+# Configure
+cp .env.example .env
+nano .env  # Add Telegram credentials
+
+# Start everything
 docker-compose up -d
 
 # Run migrations
@@ -278,12 +244,12 @@ docker-compose ps
 
 ```bash
 # On your server
-git clone <your-repo>
-cd website-change-monitor
+git clone https://github.com/Tobias-Schoch/boat-slip-monitor.git
+cd boat-slip-monitor
 
 # Configure for production
 cp .env.example .env
-nano .env  # Set strong passwords!
+nano .env  # Set strong passwords and credentials
 
 # Deploy
 docker-compose up -d
@@ -303,7 +269,7 @@ For HTTPS setup with Nginx/Caddy, see [ARCHITECTURE.md](ARCHITECTURE.md).
 # Check logs
 docker-compose logs monitor
 
-# Verify database connection
+# Verify database
 docker-compose exec postgres psql -U website_monitor
 
 # Run migrations
@@ -314,22 +280,22 @@ docker-compose exec monitor npm run migrate
 <details>
 <summary><b>No notifications received</b></summary>
 
-1. Check credentials in dashboard → Settings
+1. Check credentials in **Dashboard → Settings**
 2. Verify Telegram bot token is correct
 3. Message your bot to activate it
-4. Check logs: `docker-compose logs -f monitor | grep -i notification`
+4. Check logs: `docker-compose logs -f monitor | grep notification`
 </details>
 
 <details>
 <summary><b>Database connection failed</b></summary>
 
 ```bash
-# Check services are running
+# Check services
 docker-compose ps
 
-# Verify DATABASE_URL in .env:
-# For Docker: postgresql://website_monitor:password@postgres:5432/website_monitor
-# For Local:  postgresql://website_monitor:password@localhost:5432/website_monitor
+# Verify DATABASE_URL in .env matches docker-compose.yml
+# Docker: postgresql://website_monitor:password@postgres:5432/website_monitor
+# Local:  postgresql://website_monitor:password@localhost:5432/website_monitor
 ```
 </details>
 
@@ -351,26 +317,26 @@ kill -9 <PID>
 
 ### Email Templates
 
-Edit `packages/monitor/src/notifier/channels/email.ts` to customize the HTML email template.
+Customize HTML email design in `packages/monitor/src/notifier/channels/email.ts`
 
 ### Telegram Messages
 
-Edit `packages/monitor/src/notifier/channels/telegram.ts` to customize message formatting.
+Customize message formatting in `packages/monitor/src/notifier/channels/telegram.ts`
 
 ### Dashboard Theme
 
-The dashboard supports dark mode by default. Customize colors in `packages/web/src/app/globals.css`.
+The dashboard supports dark mode. Customize colors in `packages/web/src/app/globals.css`
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please check [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### Development Setup
+### Quick Start for Contributors
 
 ```bash
 # Fork and clone
-git clone <your-fork>
-cd website-change-monitor
+git clone https://github.com/Tobias-Schoch/boat-slip-monitor.git
+cd boat-slip-monitor
 
 # Setup
 ./scripts/quick-setup.sh
