@@ -81,6 +81,7 @@ services:
       - "3000:3000"
     volumes:
       - screenshots_data:/app/data/screenshots:ro
+      - web_logs:/app/logs
     restart: unless-stopped
 
 volumes:
@@ -91,6 +92,8 @@ volumes:
   screenshots_data:
     driver: local
   logs_data:
+    driver: local
+  web_logs:
     driver: local
 
 networks:
