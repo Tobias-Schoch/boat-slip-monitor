@@ -18,8 +18,10 @@ RUN npm ci
 RUN npx playwright install-deps chromium
 RUN npx playwright install chromium
 
-# Build all packages
-RUN npm run build
+# Build packages sequentially to ensure proper dependency resolution
+RUN npm run build --workspace=@boat-monitor/shared && \
+    npm run build --workspace=@boat-monitor/database && \
+    npm run build --workspace=@boat-monitor/monitor
 
 # Runner stage
 FROM base AS runner
