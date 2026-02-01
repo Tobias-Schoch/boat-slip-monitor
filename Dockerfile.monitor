@@ -1,104 +1,71 @@
-# Build stage - install all dependencies and build
-FROM node:20-slim AS builder
-WORKDIR /app
+# Multi-stage build for monitor service
+FROM node:20-alpine AS base
 
-# Install system dependencies for Playwright
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    libglib2.0-0 \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libasound2 \
-    && rm -rf /var/lib/apt/lists/*
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 COPY turbo.json ./
-COPY tsconfig.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/database/package.json ./packages/database/
 COPY packages/monitor/package.json ./packages/monitor/
 
-# Install ALL dependencies (including devDependencies for build)
+# Install dependencies
 RUN npm ci
 
-# Now copy source code
-COPY packages/shared ./packages/shared
-COPY packages/database ./packages/database
-COPY packages/monitor ./packages/monitor
+# Builder stage
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-# Build with turbo (respects dependency order)
-RUN npm run build
-
-# Install Playwright after build
-RUN npx playwright install-deps chromium
-RUN npx playwright install chromium
+# Build shared and database packages first
+RUN npm run build --workspace=@website-monitor/shared
+RUN npm run build --workspace=@website-monitor/database
+RUN npm run build --workspace=@website-monitor/monitor
 
 # Production stage
-FROM node:20-slim AS runner
+FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install runtime dependencies for Playwright
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install chromium for Playwright
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
     ca-certificates \
-    libglib2.0-0 \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libasound2 \
-    && rm -rf /var/lib/apt/lists/*
+    ttf-freefont
 
-RUN groupadd --system --gid 1001 nodejs
-RUN useradd --system --uid 1001 monitor
+# Tell Playwright to use installed chromium
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-# Copy package files for production install
-COPY package*.json ./
-COPY packages/shared/package.json ./packages/shared/
-COPY packages/database/package.json ./packages/database/
-COPY packages/monitor/package.json ./packages/monitor/
+# Create monitor user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 monitor
 
-# Install only production dependencies
-RUN npm ci --only=production
-
-# Copy built code from builder
+# Copy built files
 COPY --from=builder --chown=monitor:nodejs /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=monitor:nodejs /app/packages/shared/package.json ./packages/shared/
 COPY --from=builder --chown=monitor:nodejs /app/packages/database/dist ./packages/database/dist
+COPY --from=builder --chown=monitor:nodejs /app/packages/database/package.json ./packages/database/
 COPY --from=builder --chown=monitor:nodejs /app/packages/monitor/dist ./packages/monitor/dist
+COPY --from=builder --chown=monitor:nodejs /app/packages/monitor/package.json ./packages/monitor/
+COPY --from=builder --chown=monitor:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=monitor:nodejs /app/package.json ./
 
-# Copy Playwright browsers to monitor user's home
-COPY --from=builder --chown=monitor:nodejs /root/.cache/ms-playwright /home/monitor/.cache/ms-playwright
-
-# Create directories
+# Create directories for data
 RUN mkdir -p /app/data/screenshots /app/logs
 RUN chown -R monitor:nodejs /app/data /app/logs
 
 USER monitor
 
-EXPOSE 9090
+EXPOSE 3001
 
 CMD ["node", "packages/monitor/dist/index.js"]

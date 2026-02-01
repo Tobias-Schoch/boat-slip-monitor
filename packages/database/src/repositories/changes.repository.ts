@@ -1,7 +1,7 @@
 import { eq, desc } from 'drizzle-orm';
 import { db } from '../client';
 import { changes } from '../schema';
-import type { ChangeDetection, ChangeType, Priority } from '@boat-monitor/shared';
+import type { ChangeDetection, ChangeType, Priority } from '@website-monitor/shared';
 
 export class ChangesRepository {
   async create(data: {

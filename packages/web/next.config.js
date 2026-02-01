@@ -4,8 +4,9 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@boat-monitor/shared', '@boat-monitor/database'],
-  serverExternalPackages: ['postgres']
+  transpilePackages: ['@website-monitor/shared', '@website-monitor/database'],
+  serverExternalPackages: ['postgres'],
+  output: 'standalone'
 };
 
 module.exports = nextConfig;

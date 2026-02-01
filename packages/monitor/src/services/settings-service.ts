@@ -1,5 +1,5 @@
-import { SettingsRepository } from '@boat-monitor/database';
-import { createModuleLogger } from '@boat-monitor/shared';
+import { SettingsRepository } from '@website-monitor/database';
+import { createModuleLogger } from '@website-monitor/shared';
 
 const logger = createModuleLogger('SettingsService');
 

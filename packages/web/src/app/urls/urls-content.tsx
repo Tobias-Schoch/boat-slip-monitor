@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Globe, Plus, Edit, Trash2, Save, X, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { useState } from 'react';
-import type { MonitoredUrl } from '@boat-monitor/shared';
+import type { MonitoredUrl } from '@website-monitor/shared';
 
 interface UrlsContentProps {
   initialUrls: MonitoredUrl[];
@@ -65,7 +65,7 @@ export function UrlsContent({ initialUrls }: UrlsContentProps) {
       setEditForm({});
     } catch (error) {
       console.error('Failed to save:', error);
-      alert('Fehler beim Speichern der URL');
+      alert('Fehler beim Save der URL');
     } finally {
       setSaving(false);
     }
@@ -196,26 +196,26 @@ export function UrlsContent({ initialUrls }: UrlsContentProps) {
                 value={newUrlForm.name}
                 onChange={(e) => setNewUrlForm({ ...newUrlForm, name: e.target.value })}
                 className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-slate-900 dark:text-white"
-                placeholder="z.B. Konstanz Bootsliegeplatz"
+                placeholder="e.g. Example Website"
               />
             </div>
 
             <div className="space-y-2 md:col-span-2">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Beschreibung
+                Description
               </label>
               <input
                 type="text"
                 value={newUrlForm.description}
                 onChange={(e) => setNewUrlForm({ ...newUrlForm, description: e.target.value })}
                 className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-slate-900 dark:text-white"
-                placeholder="Optionale Beschreibung"
+                placeholder="Optionale Description"
               />
             </div>
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Prüfintervall (Minuten)
+                Check Interval (minutes)
               </label>
               <input
                 type="number"
@@ -234,7 +234,7 @@ export function UrlsContent({ initialUrls }: UrlsContentProps) {
                   onChange={(e) => setNewUrlForm({ ...newUrlForm, enabled: e.target.checked })}
                   className="w-5 h-5 rounded border-slate-300 text-green-600 focus:ring-green-500"
                 />
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Aktiviert</span>
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Enabled</span>
               </label>
             </div>
           </div>
@@ -253,7 +253,7 @@ export function UrlsContent({ initialUrls }: UrlsContentProps) {
               className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all flex items-center space-x-2"
             >
               <Save className="h-4 w-4" />
-              <span>{saving ? 'Speichert...' : 'Speichern'}</span>
+              <span>{saving ? 'Saving...' : 'Save'}</span>
             </button>
           </div>
         </motion.div>
@@ -297,7 +297,7 @@ export function UrlsContent({ initialUrls }: UrlsContentProps) {
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Beschreibung</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Description</label>
                     <input
                       type="text"
                       value={editForm.description || ''}
@@ -307,7 +307,7 @@ export function UrlsContent({ initialUrls }: UrlsContentProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Prüfintervall (Minuten)</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Check Interval (minutes)</label>
                     <input
                       type="number"
                       min="1"
@@ -325,7 +325,7 @@ export function UrlsContent({ initialUrls }: UrlsContentProps) {
                         onChange={(e) => setEditForm({ ...editForm, enabled: e.target.checked })}
                         className="w-5 h-5 rounded border-slate-300 text-green-600 focus:ring-green-500"
                       />
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Aktiviert</span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Enabled</span>
                     </label>
                   </div>
                 </div>
@@ -345,7 +345,7 @@ export function UrlsContent({ initialUrls }: UrlsContentProps) {
                     className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all flex items-center space-x-2"
                   >
                     <Save className="h-4 w-4" />
-                    <span>{saving ? 'Speichert...' : 'Speichern'}</span>
+                    <span>{saving ? 'Saving...' : 'Save'}</span>
                   </button>
                 </div>
               </div>

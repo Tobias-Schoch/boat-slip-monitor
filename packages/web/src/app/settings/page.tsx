@@ -1,4 +1,4 @@
-import { SettingsRepository } from '@boat-monitor/database';
+import { SettingsRepository } from '@website-monitor/database';
 import { SettingsContent } from './settings-content';
 
 const settingsRepo = new SettingsRepository();

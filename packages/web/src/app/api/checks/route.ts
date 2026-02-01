@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ChecksRepository } from '@boat-monitor/database';
+import { ChecksRepository } from '@website-monitor/database';
 
 const checksRepo = new ChecksRepository();
 

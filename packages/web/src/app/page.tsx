@@ -1,4 +1,4 @@
-import { ChecksRepository, ChangesRepository, MonitoredUrlsRepository } from '@boat-monitor/database';
+import { ChecksRepository, ChangesRepository, MonitoredUrlsRepository } from '@website-monitor/database';
 import { PageContent } from './page-content';
 
 const urlsRepo = new MonitoredUrlsRepository();

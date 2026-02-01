@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Activity, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Globe, TrendingUp, ExternalLink } from 'lucide-react';
-import type { MonitoredUrl, CheckResult, ChangeDetection } from '@boat-monitor/shared';
+import type { MonitoredUrl, CheckResult, ChangeDetection } from '@website-monitor/shared';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
@@ -82,7 +82,7 @@ export function PageContent({ urls, recentChecks, recentChanges }: {
           Dashboard
         </h2>
         <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-400 px-4">
-          24/7 Überwachung der Bootsliegeplatz-Warteliste
+          24/7 Website Monitoring with Intelligent Change Detection
         </p>
       </motion.div>
 
@@ -97,14 +97,14 @@ export function PageContent({ urls, recentChecks, recentChanges }: {
         />
         <StatCard
           icon={Globe}
-          label="Überwachte URLs"
+          label="Monitored URLs"
           value={urls.length.toString()}
           gradient="from-blue-500 to-cyan-600"
           iconColor="text-blue-500"
         />
         <StatCard
           icon={TrendingUp}
-          label="Änderungen gesamt"
+          label="Total Changes"
           value={recentChanges.length.toString()}
           gradient="from-purple-500 to-pink-600"
           iconColor="text-purple-500"
@@ -118,7 +118,7 @@ export function PageContent({ urls, recentChecks, recentChanges }: {
             <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/50">
               <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Überwachte URLs</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Monitored URLs</h3>
           </div>
           <div className="space-y-3">
             {urls.map((url, index) => (
@@ -334,7 +334,7 @@ function CheckCard({ check, index, recentChanges }: { check: CheckResult; index:
           {/* Diff */}
           {relatedChange.diff && (
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Änderungen</h4>
+              <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Changes</h4>
               <div className="relative max-h-64 sm:max-h-96 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
                 <pre className="p-3 sm:p-4 text-[10px] sm:text-xs font-mono whitespace-pre-wrap break-words">
                   {relatedChange.diff}

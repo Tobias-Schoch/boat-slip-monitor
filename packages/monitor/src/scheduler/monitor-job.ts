@@ -8,19 +8,19 @@ import {
   createModuleLogger,
   CheckStatus,
   hashContent
-} from '@boat-monitor/shared';
+} from '@website-monitor/shared';
 import {
   MonitoredUrlsRepository,
   ChecksRepository,
   ChangesRepository,
   ScreenshotsRepository,
   db
-} from '@boat-monitor/database';
+} from '@website-monitor/database';
 import { pageScraper } from '../scraper/page-scraper';
 import { changeDetector } from '../detector/change-detector';
 import { notificationDispatcher } from '../notifier/notification-dispatcher';
 import { eq } from 'drizzle-orm';
-import { htmlSnapshots } from '@boat-monitor/database';
+import { htmlSnapshots } from '@website-monitor/database';
 
 const logger = createModuleLogger('MonitorJob');
 

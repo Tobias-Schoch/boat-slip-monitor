@@ -1,11 +1,11 @@
 // MUST be first import to load .env before anything else
 import '../env-loader';
 
-import { createModuleLogger } from '@boat-monitor/shared';
-import { MonitoredUrlsRepository, ChecksRepository, ChangesRepository, db } from '@boat-monitor/database';
+import { createModuleLogger } from '@website-monitor/shared';
+import { MonitoredUrlsRepository, ChecksRepository, ChangesRepository, db } from '@website-monitor/database';
 import { playwrightManager } from '../scraper/playwright-manager';
 import { PageScraper } from '../scraper/page-scraper';
-import { CheckStatus, ChangeType, Priority } from '@boat-monitor/shared';
+import { CheckStatus, ChangeType, Priority } from '@website-monitor/shared';
 import crypto from 'crypto';
 import fs from 'fs';
 import { sql } from 'drizzle-orm';

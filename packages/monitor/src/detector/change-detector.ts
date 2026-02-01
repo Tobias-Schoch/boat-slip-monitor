@@ -7,7 +7,7 @@ import {
   Priority,
   ChangeComparisonResult,
   FormField
-} from '@boat-monitor/shared';
+} from '@website-monitor/shared';
 
 const logger = createModuleLogger('ChangeDetector');
 
@@ -47,8 +47,8 @@ export class ChangeDetector {
           // NEW form detected!
           logger.warn('🚨 CRITICAL: NEW Form detected!', { type: currentFormDetection.type });
           const description = currentFormDetection.type === 'PDF'
-            ? '📄 PDF-Antragsformular gefunden! Download jetzt möglich.'
-            : '📝 Online-Anmeldeformular entdeckt! Du kannst dich jetzt bewerben.';
+            ? '📄 PDF form detected! New downloadable form available.'
+            : '📝 Online form detected! New submission form is now available.';
           return {
             hasChanged: true,
             type: ChangeType.FORM_DETECTED,
@@ -94,7 +94,7 @@ export class ChangeDetector {
         type: ChangeType.CONTENT,
         priority: Priority.INFO,
         confidence: 1 - similarity,
-        description: '📝 Die Seite wurde aktualisiert. Schau dir die Änderungen im Screenshot an.',
+        description: '📝 Page content updated. Check the screenshot for details.',
         diff: this.generateDiff(previousHtmlOriginal || previousHtmlNormalized, currentHtml)
       };
     }
@@ -131,15 +131,15 @@ export class ChangeDetector {
 
     // Check for PDF forms
     const hasPdfLink = /\.pdf["'\s>]/i.test(html);
-    const hasFormKeywords = /(antrag|formular|application|form).*\.pdf/i.test(html);
+    const hasFormKeywords = /(application|form).*\.pdf/i.test(html);
 
     if (hasPdfLink && hasFormKeywords) {
       return { detected: true, type: 'PDF', confidence: 0.85 };
     }
 
     // Check for online application links
-    const hasOnlineApplication = /(online.*antrag|onlineantrag|apply.*online)/i.test(html);
-    const hasApplicationUrl = /\/antrag|\/application|\/bewerbung/i.test(html);
+    const hasOnlineApplication = /(apply.*online|online.*application)/i.test(html);
+    const hasApplicationUrl = /\/application|\/apply/i.test(html);
 
     if (hasOnlineApplication || hasApplicationUrl) {
       return { detected: true, type: 'HTML', confidence: 0.8 };
@@ -175,11 +175,11 @@ export class ChangeDetector {
 
     if (matchedCritical.length > 0) {
       // More user-friendly descriptions based on keywords
-      let description = '🚨 Wichtige Änderung auf der Seite!';
-      if (matchedCritical.some(k => k.includes('warteliste') || k.includes('anmeldung'))) {
-        description = '⚠️ Die Warteliste könnte bald öffnen! Neue Informationen zur Anmeldung gefunden.';
-      } else if (matchedCritical.some(k => k.includes('formular') || k.includes('antrag'))) {
-        description = '📝 Anmeldeformular wurde gefunden! Jetzt könnte eine Bewerbung möglich sein.';
+      let description = '🚨 Critical keywords detected on page!';
+      if (matchedCritical.some(k => k.toLowerCase().includes('registration') || k.toLowerCase().includes('apply'))) {
+        description = '⚠️ Registration or application keywords found! Important update detected.';
+      } else if (matchedCritical.some(k => k.toLowerCase().includes('form') || k.toLowerCase().includes('submit'))) {
+        description = '📝 Form-related keywords detected! New submission options may be available.';
       }
 
       return {
@@ -192,11 +192,11 @@ export class ChangeDetector {
     }
 
     if (matchedImportant.length > 0) {
-      let description = 'ℹ️ Relevante Änderung auf der Seite gefunden.';
-      if (matchedImportant.some(k => k.includes('verfügbar') || k.includes('available'))) {
-        description = '✅ Neue Verfügbarkeits-Informationen wurden veröffentlicht.';
-      } else if (matchedImportant.some(k => k.includes('termin') || k.includes('öffnung'))) {
-        description = '📅 Neue Informationen zu Terminen oder Öffnungszeiten.';
+      let description = 'ℹ️ Important keywords detected on page.';
+      if (matchedImportant.some(k => k.toLowerCase().includes('available') || k.toLowerCase().includes('updated'))) {
+        description = '✅ New availability or update information published.';
+      } else if (matchedImportant.some(k => k.toLowerCase().includes('deadline') || k.toLowerCase().includes('announcement'))) {
+        description = '📅 New deadline or announcement information available.';
       }
 
       return {

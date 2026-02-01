@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import postgres from 'postgres';
 import fs from 'fs';
 import path from 'path';
-import { DATABASE_CONFIG, logger } from '@boat-monitor/shared';
+import { DATABASE_CONFIG, logger } from '@website-monitor/shared';
 
 // Load .env from project root
 dotenv.config({ path: path.join(__dirname, '../../../.env') });

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Settings as SettingsIcon, Bell, Mail, Activity, Save, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
-import type { AppSetting } from '@boat-monitor/database';
+import type { AppSetting } from '@website-monitor/database';
 
 interface SettingsContentProps {
   initialSettings: AppSetting[];
@@ -34,7 +34,7 @@ export function SettingsContent({ initialSettings }: SettingsContentProps) {
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
       console.error('Failed to save settings:', error);
-      alert('Fehler beim Speichern der Einstellungen');
+      alert('Failed to save settings');
     } finally {
       setSaving(false);
     }
@@ -42,19 +42,19 @@ export function SettingsContent({ initialSettings }: SettingsContentProps) {
 
   const categories = {
     notifications: {
-      title: 'Telegram Benachrichtigungen',
+      title: 'Telegram Notifications',
       icon: Bell,
       gradient: 'from-blue-500 to-cyan-600',
       fields: ['telegram_bot_token', 'telegram_chat_id']
     },
     email: {
-      title: 'E-Mail Benachrichtigungen',
+      title: 'Email Notifications',
       icon: Mail,
       gradient: 'from-purple-500 to-pink-600',
       fields: ['smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_password', 'smtp_from', 'smtp_to']
     },
     monitoring: {
-      title: 'Monitoring Konfiguration',
+      title: 'Monitoring Configuration',
       icon: Activity,
       gradient: 'from-green-500 to-emerald-600',
       fields: ['check_interval_minutes', 'log_level', 'screenshot_dir']
@@ -67,14 +67,14 @@ export function SettingsContent({ initialSettings }: SettingsContentProps) {
       telegram_chat_id: 'Chat ID',
       smtp_host: 'SMTP Server',
       smtp_port: 'Port',
-      smtp_secure: 'TLS/SSL aktiviert',
-      smtp_user: 'Benutzername / E-Mail',
-      smtp_password: 'Passwort',
-      smtp_from: 'Absender E-Mail',
-      smtp_to: 'Empfänger E-Mail',
-      check_interval_minutes: 'Prüfintervall (Minuten)',
+      smtp_secure: 'TLS/SSL Enabled',
+      smtp_user: 'Username / Email',
+      smtp_password: 'Password',
+      smtp_from: 'From Email',
+      smtp_to: 'To Email',
+      check_interval_minutes: 'Check Interval (minutes)',
       log_level: 'Log Level',
-      screenshot_dir: 'Screenshot-Verzeichnis'
+      screenshot_dir: 'Screenshot Directory'
     };
     return labels[key] || key;
   };
@@ -99,7 +99,7 @@ export function SettingsContent({ initialSettings }: SettingsContentProps) {
           </div>
         </div>
         <h2 className="text-5xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 dark:from-orange-400 dark:via-red-400 dark:to-pink-400 bg-clip-text text-transparent">
-          Einstellungen
+          Settings
         </h2>
         <p className="text-lg text-slate-600 dark:text-slate-400">
           Konfiguriere Benachrichtigungen und Monitoring
@@ -203,12 +203,12 @@ export function SettingsContent({ initialSettings }: SettingsContentProps) {
           {saved ? (
             <>
               <CheckCircle2 className="h-6 w-6" />
-              <span>Erfolgreich gespeichert!</span>
+              <span>Successfully saved!</span>
             </>
           ) : (
             <>
               <Save className="h-6 w-6" />
-              <span>{saving ? 'Speichert...' : 'Einstellungen speichern'}</span>
+              <span>{saving ? 'Saving...' : 'Settings speichern'}</span>
             </>
           )}
         </button>

@@ -1,5 +1,5 @@
 {
-  "name": "@boat-monitor/database",
+  "name": "@website-monitor/database",
   "version": "1.0.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -12,7 +12,7 @@
     "migrate:create": "node scripts/create-migration.js"
   },
   "dependencies": {
-    "@boat-monitor/shared": "*",
+    "@website-monitor/shared": "*",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.38.3",
     "postgres": "^3.4.5",

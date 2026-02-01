@@ -2,7 +2,7 @@ import { Page } from 'playwright';
 import fs from 'fs/promises';
 import path from 'path';
 import { playwrightManager } from './playwright-manager';
-import { retry, createModuleLogger, APP_CONFIG, hashContent } from '@boat-monitor/shared';
+import { retry, createModuleLogger, APP_CONFIG, hashContent } from '@website-monitor/shared';
 
 const logger = createModuleLogger('PageScraper');
 

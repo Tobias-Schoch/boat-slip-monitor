@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { SettingsRepository } from '@boat-monitor/database';
+import { SettingsRepository } from '@website-monitor/database';
 
 const settingsRepo = new SettingsRepository();
 

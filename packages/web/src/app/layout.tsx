@@ -18,10 +18,10 @@ export default function RootLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <html lang="de" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <title>Bootsliegeplatz Monitor</title>
-        <meta name="description" content="24/7 Überwachung der Bootsliegeplatz-Warteliste in Konstanz" />
+        <title>Website Change Monitor</title>
+        <meta name="description" content="24/7 Website monitoring with intelligent change detection" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </head>
       <body className={inter.className}>
@@ -45,13 +45,13 @@ export default function RootLayout({
                     </div>
                     <div className="hidden sm:block">
                       <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                        Bootsliegeplatz Monitor
+                        Website Monitor
                       </h1>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Konstanz Warteliste</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Change Detection</p>
                     </div>
                     <div className="sm:hidden">
                       <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                        Bootsliegeplatz
+                        Website Monitor
                       </h1>
                     </div>
                   </div>
@@ -60,7 +60,7 @@ export default function RootLayout({
                   <div className="hidden md:flex items-center space-x-2">
                     <NavLink href="/" icon={LayoutDashboard}>Dashboard</NavLink>
                     <NavLink href="/urls" icon={Globe}>URLs</NavLink>
-                    <NavLink href="/settings" icon={Settings}>Einstellungen</NavLink>
+                    <NavLink href="/settings" icon={Settings}>Settings</NavLink>
                   </div>
 
                   {/* Mobile Menu Button */}
@@ -84,7 +84,7 @@ export default function RootLayout({
                       URLs
                     </MobileNavLink>
                     <MobileNavLink href="/settings" icon={Settings} onClick={() => setMobileMenuOpen(false)}>
-                      Einstellungen
+                      Settings
                     </MobileNavLink>
                   </div>
                 )}

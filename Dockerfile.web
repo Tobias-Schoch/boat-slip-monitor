@@ -1,65 +1,64 @@
-# Build stage
-FROM node:20-slim AS builder
-WORKDIR /app
+# Multi-stage build for web dashboard
+FROM node:20-alpine AS base
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 COPY turbo.json ./
-COPY tsconfig.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/database/package.json ./packages/database/
 COPY packages/web/package.json ./packages/web/
 
-# Install ALL dependencies
+# Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY packages/shared ./packages/shared
-COPY packages/database ./packages/database
-COPY packages/web ./packages/web
+# Builder stage
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-# Build with turbo
-RUN npm run build
+# Build shared and database packages first
+RUN npm run build --workspace=@website-monitor/shared
+RUN npm run build --workspace=@website-monitor/database
+
+# Build Next.js app
+RUN npm run build --workspace=@website-monitor/web
 
 # Production stage
-FROM node:20-slim AS runner
+FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+# Create nextjs user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-RUN groupadd --system --gid 1001 nodejs
-RUN useradd --system --uid 1001 nextjs
+# Copy built files
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder /app/packages/shared/package.json ./packages/shared/
+COPY --from=builder /app/packages/database/dist ./packages/database/dist
+COPY --from=builder /app/packages/database/package.json ./packages/database/
+COPY --from=builder /app/packages/web/.next ./packages/web/.next
+COPY --from=builder /app/packages/web/public ./packages/web/public
+COPY --from=builder /app/packages/web/package.json ./packages/web/
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
 
-# Copy package files
-COPY package*.json ./
-COPY packages/shared/package.json ./packages/shared/
-COPY packages/database/package.json ./packages/database/
-COPY packages/web/package.json ./packages/web/
-
-# Install production dependencies
-RUN npm ci --only=production
-
-# Copy built code
-COPY --from=builder --chown=nextjs:nodejs /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder --chown=nextjs:nodejs /app/packages/database/dist ./packages/database/dist
-COPY --from=builder --chown=nextjs:nodejs /app/packages/web/.next ./packages/web/.next
-
-# Create logs directory
-RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
+# Create directories
+RUN mkdir -p /app/data/screenshots /app/logs && \
+    chown -R nextjs:nodejs /app/data /app/logs
 
 USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-CMD ["npm", "run", "start", "--workspace=@boat-monitor/web"]
+CMD ["npm", "run", "start", "--workspace=@website-monitor/web"]

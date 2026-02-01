@@ -1,48 +1,13 @@
-# Dependencies
 node_modules
-.pnp
-.pnp.js
-
-# Build outputs
-dist
-build
 .next
-out
-
-# Testing
-coverage
-
-# Environment
-.env
-.env*.local
-
-# Logs
-logs
-*.log
-
-# OS
-.DS_Store
-
-# IDEs
-.vscode
-.idea
-*.swp
-*.swo
-*~
-
-# Git
+dist
 .git
-.gitignore
-
-# Data
-data
-screenshots
-*.db
-*.sqlite
-
-# Turbo
-.turbo
-
-# Documentation
+.env
+.env.local
+*.log
+data/
+logs/
 README.md
-*.md
+.DS_Store
+coverage
+.turbo

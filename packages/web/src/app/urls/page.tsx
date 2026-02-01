@@ -1,4 +1,4 @@
-import { MonitoredUrlsRepository } from '@boat-monitor/database';
+import { MonitoredUrlsRepository } from '@website-monitor/database';
 import { UrlsContent } from './urls-content';
 
 const urlsRepo = new MonitoredUrlsRepository();

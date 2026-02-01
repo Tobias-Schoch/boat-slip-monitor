@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { checkDatabaseConnection } from '@boat-monitor/database';
+import { checkDatabaseConnection } from '@website-monitor/database';
 
 export async function GET() {
   try {

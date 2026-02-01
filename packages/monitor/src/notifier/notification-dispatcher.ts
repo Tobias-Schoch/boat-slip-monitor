@@ -2,7 +2,7 @@ import {
   Priority,
   NotificationPayload,
   createModuleLogger
-} from '@boat-monitor/shared';
+} from '@website-monitor/shared';
 import { settingsService } from '../services/settings-service';
 import { telegramChannel } from './channels/telegram';
 import { emailChannel } from './channels/email';

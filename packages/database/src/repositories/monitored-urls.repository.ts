@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../client';
 import { monitoredUrls } from '../schema';
-import type { MonitoredUrl } from '@boat-monitor/shared';
+import type { MonitoredUrl } from '@website-monitor/shared';
 
 export class MonitoredUrlsRepository {
   private mapToMonitoredUrl(row: any): MonitoredUrl {

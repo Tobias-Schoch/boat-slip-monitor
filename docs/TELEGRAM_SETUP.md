@@ -51,7 +51,7 @@ Your Chat ID is the unique identifier for your Telegram account. The bot needs t
 #### Method A: Automated Helper Script (Recommended)
 
 ```bash
-cd boat-slip-monitor
+cd website-change-monitor
 ./scripts/get-telegram-chat-id.sh
 ```
 
@@ -277,7 +277,7 @@ You can customize your bot with @BotFather:
    - Select your bot
    - Click "Edit Bot"
    - Click "Description"
-   - Add: "24/7 monitoring for boat slip waiting list"
+   - Add: "24/7 monitoring for website waiting list"
 
 2. **Set about text**
    - Click "About"

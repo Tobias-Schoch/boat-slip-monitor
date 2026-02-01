@@ -1,5 +1,5 @@
 import { chromium, Browser, BrowserContext, Page } from 'playwright';
-import { createModuleLogger } from '@boat-monitor/shared';
+import { createModuleLogger } from '@website-monitor/shared';
 
 const logger = createModuleLogger('PlaywrightManager');
 

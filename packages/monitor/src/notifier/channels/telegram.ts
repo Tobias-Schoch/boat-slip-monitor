@@ -3,7 +3,7 @@ import '../../env-loader';
 
 import TelegramBot from 'node-telegram-bot-api';
 import fs from 'fs/promises';
-import { NotificationPayload, NotificationResult, createModuleLogger } from '@boat-monitor/shared';
+import { NotificationPayload, NotificationResult, createModuleLogger, Priority } from '@website-monitor/shared';
 import { settingsService } from '../../services/settings-service';
 
 const logger = createModuleLogger('TelegramChannel');
@@ -46,17 +46,18 @@ class TelegramChannel {
 
       // Only add URL button if we have a valid URL (not localhost)
       if (payload.url && !payload.url.includes('localhost')) {
-        buttons.push({ text: '🔍 View Page', url: payload.url });
+        buttons.push({ text: '🌐 Open Website', url: payload.url });
       }
 
       buttons.push({ text: '✅ Acknowledge', callback_data: 'ack' });
 
-      // Send text message
+      // Send text message with MarkdownV2
       const sentMessage = await this.bot.sendMessage(this.chatId, message, {
-        parse_mode: 'Markdown',
+        parse_mode: 'MarkdownV2',
         reply_markup: {
           inline_keyboard: [buttons]
-        }
+        },
+        disable_web_page_preview: false
       });
 
       // Send screenshot if available
@@ -64,7 +65,8 @@ class TelegramChannel {
         try {
           const screenshot = await fs.readFile(payload.screenshotPath);
           await this.bot.sendPhoto(this.chatId, screenshot, {
-            caption: 'Screenshot of the detected change'
+            caption: '📸 Screenshot of detected change',
+            reply_to_message_id: sentMessage.message_id
           });
         } catch (error) {
           logger.warn('Failed to send screenshot', { error });
@@ -86,36 +88,68 @@ class TelegramChannel {
     }
   }
 
-  private escapeMarkdown(text: string): string {
-    // Escape Markdown special characters for Telegram
-    return text.replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, '\\$&');
+  private escapeMarkdownV2(text: string): string {
+    // Escape MarkdownV2 special characters for Telegram
+    return text.replace(/([_*[\]()~`>#+\-=|{}.!\\])/g, '\\$1');
   }
 
   private formatMessage(payload: NotificationPayload): string {
-    const priorityEmoji = {
-      INFO: 'ℹ️',
-      IMPORTANT: '⚠️',
-      CRITICAL: '🚨'
+    const priorityConfig = {
+      INFO: { emoji: '🔵', label: 'INFO', color: '' },
+      IMPORTANT: { emoji: '🟡', label: 'IMPORTANT', color: '' },
+      CRITICAL: { emoji: '🔴', label: 'CRITICAL', color: '' }
     };
 
-    const emoji = priorityEmoji[payload.priority] || 'ℹ️';
+    const config = priorityConfig[payload.priority] || priorityConfig.INFO;
 
-    let message = `${emoji} *${this.escapeMarkdown(payload.title)}*\n\n`;
-    message += `${this.escapeMarkdown(payload.message)}\n\n`;
+    // Header with priority badge
+    let message = `${config.emoji} *${this.escapeMarkdownV2(config.label)}* ${config.emoji}\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Show matched keywords if available (user wants to know what changed)
+    // Title
+    message += `📋 *${this.escapeMarkdownV2(payload.title)}*\n\n`;
+
+    // Message body
+    message += `${this.escapeMarkdownV2(payload.message)}\n\n`;
+
+    // Matched keywords section
     if (payload.metadata?.matchedKeywords && payload.metadata.matchedKeywords.length > 0) {
-      const keywords = payload.metadata.matchedKeywords.map((k: string) => this.escapeMarkdown(k)).join(', ');
-      message += `🔍 Gefunden: ${keywords}\n\n`;
+      message += `🔍 *Matched Keywords:*\n`;
+      const keywords = payload.metadata.matchedKeywords
+        .map((k: string) => `  \\• \`${this.escapeMarkdownV2(k)}\``)
+        .join('\n');
+      message += `${keywords}\n\n`;
     }
 
+    // Confidence level
+    if (payload.metadata?.confidence !== undefined) {
+      const confidence = Math.round(payload.metadata.confidence * 100);
+      const confidenceBar = this.getConfidenceBar(confidence);
+      message += `📊 *Confidence:* ${confidence}% ${confidenceBar}\n\n`;
+    }
+
+    // URL
     if (payload.url) {
-      message += `🔗 ${this.escapeMarkdown(payload.url)}\n`;
+      const escapedUrl = this.escapeMarkdownV2(payload.url);
+      message += `🔗 *URL:*\n${escapedUrl}\n\n`;
     }
 
-    message += `⏰ ${new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}`;
+    // Footer with timestamp
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    const timestamp = new Date().toLocaleString('en-US', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      hour12: false
+    });
+    message += `⏰ ${this.escapeMarkdownV2(timestamp)}`;
 
     return message;
+  }
+
+  private getConfidenceBar(percentage: number): string {
+    const filled = Math.round(percentage / 10);
+    const empty = 10 - filled;
+    return '█'.repeat(filled) + '░'.repeat(empty);
   }
 }
 

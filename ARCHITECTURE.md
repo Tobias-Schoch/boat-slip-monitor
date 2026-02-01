@@ -1,6 +1,6 @@
-# Boat Slip Monitor - Architecture
+# Website Change Monitor - Architecture
 
-Technical architecture documentation for the monitoring system.
+Technical architecture documentation for the website monitoring system.
 
 ## System Overview
 
@@ -45,8 +45,8 @@ Technical architecture documentation for the monitoring system.
         │             │
         │      ┌──────┴──────────────────────────────────┐
         │      │    Monitored URLs                        │
-        │      │    - konstanz.de                         │
-        │      │    - service-bw.de                       │
+        │      │    - Configurable via dashboard          │
+        │      │    - Multiple URLs supported             │
         │      └──────────────────────────────────────────┘
         │
         │      ┌─────────────────────────────────────────┐
@@ -75,8 +75,8 @@ Technical architecture documentation for the monitoring system.
 **Features**:
 - Browser pool (4 persistent contexts)
 - Stealth scripts (override navigator.webdriver)
-- Konstanz geolocation
-- German locale and User-Agent
+- Configurable geolocation
+- Customizable locale and User-Agent
 
 **Files**:
 - `packages/monitor/src/scraper/playwright-manager.ts`

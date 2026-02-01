@@ -1,213 +1,418 @@
-# Bootsliegeplatz Wartelisten-Monitor
+<div align="center">
 
-A robust 24/7 monitoring system that watches the boat slip waiting list in Konstanz and notifies you immediately via multi-channel notifications when it opens in Q1 2026.
+# 🔍 Website Change Monitor
 
-## ✨ New! Interactive Setup
+**Intelligent 24/7 website monitoring with smart notifications**
 
-**Get started in 5 minutes** with our new interactive setup script:
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
 
-```bash
-cd boat-slip-monitor
-./scripts/setup.sh
-```
+[Features](#-features) •
+[Quick Start](#-quick-start) •
+[Demo](#-demo) •
+[Documentation](#-documentation) •
+[Contributing](#-contributing)
 
-The script will:
-- ✅ Guide you through Telegram bot creation
-- ✅ Automatically get your Chat ID (no more empty results!)
-- ✅ Generate your .env file
-- ✅ Install and configure everything
+</div>
 
-**Need help with Telegram?** See our detailed guides:
-- 📖 [GETTING_STARTED.md](GETTING_STARTED.md) - Step-by-step walkthrough
-- 📱 [docs/TELEGRAM_SETUP.md](docs/TELEGRAM_SETUP.md) - Complete Telegram guide
-- 🔧 [scripts/get-telegram-chat-id.sh](scripts/get-telegram-chat-id.sh) - Chat ID helper script
+---
 
-## Features
+## 🎯 What is this?
 
-- **Intelligent Monitoring**: Checks every 5 minutes with smart change detection
-- **Multi-Channel Notifications**: Telegram, Email, SMS, and Voice calls
-- **Next.js Dashboard**: Real-time status, history, screenshots, and settings
-- **Priority System**: INFO, IMPORTANT, and CRITICAL notifications
-- **Docker Deployment**: Easy local and VPS deployment
+Website Change Monitor is a **production-ready monitoring system** that tracks changes on websites and sends intelligent notifications when important updates are detected. Perfect for monitoring:
 
-## Tech Stack
+- 🎟️ Registration openings
+- 📦 Product availability
+- 📰 News and announcements
+- 💼 Job postings
+- 🏛️ Government portals
+- 🎫 Event tickets
+- ...and any website you care about!
 
-- **Backend**: Node.js/TypeScript with Playwright
-- **Frontend**: Next.js 14 (App Router) with Shadcn UI
-- **Database**: PostgreSQL with Drizzle ORM
-- **Job Queue**: BullMQ (Redis)
-- **Deployment**: Docker Compose
+## ✨ Features
 
-## Quick Start
+<table>
+<tr>
+<td width="50%">
+
+### 🧠 Intelligent Detection
+- **Hash-based comparison** (memory efficient)
+- **Keyword matching** (customizable)
+- **Form detection** (HTML & PDF)
+- **Screenshot capture** for visual verification
+- **Priority system** (INFO, IMPORTANT, CRITICAL)
+
+</td>
+<td width="50%">
+
+### 📢 Rich Notifications
+- **Telegram** with inline buttons & rich formatting
+- **Email** with beautiful HTML templates
+- **SMS** via Twilio (optional)
+- **Voice calls** (optional)
+- Multi-channel delivery
+
+</td>
+</tr>
+<tr>
+<td>
+
+### 🎨 Modern Dashboard
+- **Real-time monitoring** status
+- **Change history** with diffs
+- **Screenshot gallery**
+- **Settings management**
+- Dark mode support
+
+</td>
+<td>
+
+### 🐳 Production Ready
+- **Docker Compose** setup included
+- **Health checks** and auto-restart
+- **Database migrations** automated
+- **Startup validation** with helpful errors
+- VPS deployment guide
+
+</td>
+</tr>
+</table>
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 20+
-- Docker & Docker Compose
-- Telegram account (for notifications)
-
-### Easy Setup (Interactive)
-
-Run the interactive setup script that will guide you through the entire configuration:
-
 ```bash
-cd boat-slip-monitor
-./scripts/setup.sh
+# Required
+✓ Node.js 20+
+✓ Docker Desktop
+✓ Telegram account (for notifications)
+
+# Optional
+✓ Gmail (for email notifications)
+✓ Twilio (for SMS/voice)
 ```
 
-This will:
-1. **Prompt you for all credentials** (Telegram, Email, SMS, etc.)
-2. **Generate your .env file** automatically
-3. Install dependencies
-4. Build all packages
-5. Start PostgreSQL and Redis
-6. Run database migrations
-7. Create required directories
-
-**Note**: Only Telegram credentials are required. All other notification channels are optional and can be skipped.
-
-### Manual Setup (Advanced)
-
-If you prefer manual configuration:
+### Installation (2 minutes)
 
 ```bash
-# Copy environment template
-cp .env.example .env
+# Clone the repository
+git clone https://github.com/yourusername/website-change-monitor.git
+cd website-change-monitor
 
-# Edit with your credentials
-nano .env
-
-# Install dependencies
-npm install
-
-# Build packages
-npm run build
-
-# Start services
-docker-compose up -d postgres redis
-
-# Run migrations
-npm run migrate
+# Run automated setup
+./scripts/quick-setup.sh
 ```
 
-### Reconfigure Credentials
+The script will:
+1. ✅ Create your `.env` file
+2. ✅ Start PostgreSQL & Redis
+3. ✅ Install dependencies
+4. ✅ Build all packages
+5. ✅ Run database migrations
 
-To update credentials later without re-running full setup:
+### Configuration (3 minutes)
+
+**Get your Telegram bot token:**
+
+1. Open Telegram and message [@BotFather](https://t.me/botfather)
+2. Send `/newbot` and follow instructions
+3. Copy your bot token
+
+**Get your Chat ID:**
+
+1. Message your bot (any text)
+2. Visit: `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates`
+3. Find `"chat":{"id":123456789}`
+
+**Add to `.env`:**
 
 ```bash
-./scripts/configure-credentials.sh
+TELEGRAM_BOT_TOKEN=1234567890:ABCdef...
+TELEGRAM_CHAT_ID=123456789
 ```
 
-### Development
+### Start Monitoring
 
 ```bash
-# Start monitor service only
+# Terminal 1: Start monitor
 npm run monitor
 
-# Start web dashboard only
+# Terminal 2: Start dashboard
 npm run web
-
-# Run all services in parallel
-npm run dev
 ```
 
-## Project Structure
+Open http://localhost:3000 and add your first URL! 🎉
+
+## 🎬 Demo
+
+<div align="center">
+
+### Dashboard
+![Dashboard](https://via.placeholder.com/800x400?text=Dashboard+Screenshot)
+
+### Telegram Notification
+![Telegram](https://via.placeholder.com/400x600?text=Telegram+Notification)
+
+### Email Notification
+![Email](https://via.placeholder.com/600x400?text=Email+Notification)
+
+</div>
+
+## 📚 Documentation
+
+### Architecture
 
 ```
-boat-slip-monitor/
+┌─────────────────────────────────────────┐
+│           🌐 Websites                   │
+└────────────────┬────────────────────────┘
+                 │
+          ┌──────┴──────┐
+          │  Playwright │  (Browser automation)
+          │   Scraper   │
+          └──────┬──────┘
+                 │
+          ┌──────┴──────┐
+          │    Change   │  (Smart detection)
+          │   Detector  │
+          └──────┬──────┘
+                 │
+     ┌───────────┴───────────┐
+     │   Notification        │
+     │   Dispatcher          │
+     └───┬───────────┬───────┘
+         │           │
+    ┌────┴────┐ ┌───┴────┐
+    │Telegram │ │ Email  │
+    └─────────┘ └────────┘
+```
+
+### Project Structure
+
+```
+website-change-monitor/
 ├── packages/
-│   ├── shared/          # Shared types, utils, constants
-│   ├── database/        # PostgreSQL client, repositories, migrations
-│   ├── monitor/         # Backend monitoring service
+│   ├── shared/          # Types, utilities, constants
+│   ├── database/        # PostgreSQL schemas & migrations
+│   ├── monitor/         # Background monitoring service
 │   └── web/             # Next.js dashboard
-├── docker-compose.yml   # Docker services configuration
-├── turbo.json          # Monorepo build configuration
-└── package.json        # Workspace configuration
+├── scripts/             # Helper scripts
+├── docker-compose.yml   # Production deployment
+└── README.md            # You are here!
 ```
 
-## Monitored URLs
+### Configuration Options
 
-- https://www.konstanz.de/stadt+gestalten/bauen+_+wohnen/privat+bauen/bootsliegeplatz
-- https://www.konstanz.de/serviceportal/-/leistungen+von+a-z/neubeantragung-bootsliegeplatz-bootsliegeplaetze/vbid6001501
-- https://www.service-bw.de/zufi/leistungen/6001501?plz=78467&ags=08335043
-- https://www.service-bw.de/onlineantraege/onlineantrag?processInstanceId=AZwTjGSsczqMBp3WMQZbUg
+#### Check Interval
 
-## Credential Setup
+Configure how often to check each URL:
 
-### Telegram (Required)
-
-1. **Create a bot**:
-   - Message [@BotFather](https://t.me/botfather) on Telegram
-   - Send `/newbot` and follow instructions
-   - Copy the bot token
-
-2. **Get your Chat ID**:
-   - Message your new bot
-   - Visit: `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates`
-   - Find `chat` → `id` in the response
-
-### Email (Optional)
-
-For Gmail:
-1. Enable 2-Factor Authentication
-2. Go to https://myaccount.google.com/apppasswords
-3. Create an app password for "Mail"
-4. Use this password in the setup (not your regular Gmail password)
-
-### SMS/Voice (Optional)
-
-1. Sign up at https://www.twilio.com
-2. Verify your phone number
-3. Get Account SID and Auth Token from dashboard
-4. Purchase a Twilio phone number
-
-### Test Notifications
-
-After setup, test your notification channels:
-
-```bash
-# Test Telegram
-./scripts/test-notification.sh telegram
-
-# Test Email (if configured)
-./scripts/test-notification.sh email
-
-# Test SMS (if configured)
-./scripts/test-notification.sh sms
+```typescript
+// In dashboard: Settings → Check Interval (minutes)
+// Or in .env:
+CHECK_INTERVAL_MINUTES=5  // Default: 5 minutes
 ```
 
-## Deployment
+#### Custom Keywords
 
-### Local (macOS/NAS)
+Edit `packages/shared/src/constants/urls.ts`:
 
-```bash
-docker-compose up -d postgres redis
-npm run migrate
-npm run build
-npm run monitor &
-npm run web
+```typescript
+// Trigger CRITICAL notifications
+export const CRITICAL_KEYWORDS = [
+  'available',
+  'in stock',
+  'register now',
+  'apply now',
+  'booking open'
+];
+
+// Trigger IMPORTANT notifications
+export const IMPORTANT_KEYWORDS = [
+  'updated',
+  'new',
+  'announcement',
+  'deadline'
+];
 ```
 
-### VPS (Ubuntu 22.04)
+Then rebuild: `npm run build`
+
+### Adding URLs
+
+1. Open dashboard at http://localhost:3000
+2. Click **"URLs"** tab
+3. Click **"Add URL"**
+4. Fill in:
+   - **Name**: Friendly identifier
+   - **URL**: Complete URL to monitor
+   - **Description**: What you're watching for
+   - **Check Interval**: Minutes between checks
+5. Click **"Save"**
+
+The monitor will automatically start checking your URL!
+
+## 🐳 Docker Deployment
+
+### Quick Deploy
 
 ```bash
-# Install Docker
-curl -fsSL https://get.docker.com | sh
-
-# Clone and configure
-git clone <repo-url>
-cd boat-slip-monitor
+# Configure environment
 cp .env.example .env
-nano .env  # Fill in production values
+nano .env
+
+# Start all services
+docker-compose up -d
+
+# Run migrations
+docker-compose exec monitor npm run migrate
+
+# Check status
+docker-compose ps
+```
+
+### Production (VPS)
+
+```bash
+# On your server
+git clone <your-repo>
+cd website-change-monitor
+
+# Configure for production
+cp .env.example .env
+nano .env  # Set strong passwords!
 
 # Deploy
 docker-compose up -d
 
-# Verify
-docker-compose ps
-curl http://localhost:3000/api/health
+# View logs
+docker-compose logs -f monitor
 ```
 
-## License
+For HTTPS setup with Nginx/Caddy, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
-MIT
+## 🔧 Troubleshooting
+
+<details>
+<summary><b>Monitor won't start</b></summary>
+
+```bash
+# Check logs
+docker-compose logs monitor
+
+# Verify database connection
+docker-compose exec postgres psql -U website_monitor
+
+# Run migrations
+docker-compose exec monitor npm run migrate
+```
+</details>
+
+<details>
+<summary><b>No notifications received</b></summary>
+
+1. Check credentials in dashboard → Settings
+2. Verify Telegram bot token is correct
+3. Message your bot to activate it
+4. Check logs: `docker-compose logs -f monitor | grep -i notification`
+</details>
+
+<details>
+<summary><b>Database connection failed</b></summary>
+
+```bash
+# Check services are running
+docker-compose ps
+
+# Verify DATABASE_URL in .env:
+# For Docker: postgresql://website_monitor:password@postgres:5432/website_monitor
+# For Local:  postgresql://website_monitor:password@localhost:5432/website_monitor
+```
+</details>
+
+<details>
+<summary><b>Port 3000 already in use</b></summary>
+
+```bash
+# Find what's using it
+lsof -i :3000
+
+# Kill the process
+kill -9 <PID>
+
+# Or change port in docker-compose.yml
+```
+</details>
+
+## 🎨 Customization
+
+### Email Templates
+
+Edit `packages/monitor/src/notifier/channels/email.ts` to customize the HTML email template.
+
+### Telegram Messages
+
+Edit `packages/monitor/src/notifier/channels/telegram.ts` to customize message formatting.
+
+### Dashboard Theme
+
+The dashboard supports dark mode by default. Customize colors in `packages/web/src/app/globals.css`.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please check [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Development Setup
+
+```bash
+# Fork and clone
+git clone <your-fork>
+cd website-change-monitor
+
+# Setup
+./scripts/quick-setup.sh
+
+# Create feature branch
+git checkout -b feature/amazing-feature
+
+# Make changes and test
+npm run dev
+
+# Submit PR
+```
+
+## 📊 Tech Stack
+
+- **Backend**: Node.js 20, TypeScript 5.7
+- **Frontend**: Next.js 14, React 19, Tailwind CSS
+- **Database**: PostgreSQL 16, Drizzle ORM
+- **Queue**: BullMQ, Redis 7
+- **Browser**: Playwright (Chromium)
+- **Deployment**: Docker, Docker Compose
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## ⭐ Star History
+
+If you find this project useful, please consider giving it a star!
+
+## 🙏 Acknowledgments
+
+- Built with modern TypeScript and React
+- Inspired by the need for reliable website monitoring
+- Made with ❤️ for the open source community
+
+---
+
+<div align="center">
+
+**[⬆ Back to Top](#-website-change-monitor)**
+
+Made with ☕ and 💻
+
+</div>

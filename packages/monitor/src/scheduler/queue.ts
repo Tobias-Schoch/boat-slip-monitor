@@ -3,7 +3,7 @@ import '../env-loader';
 
 import { Queue, Worker } from 'bullmq';
 import IORedis from 'ioredis';
-import { REDIS_CONFIG, createModuleLogger } from '@boat-monitor/shared';
+import { REDIS_CONFIG, createModuleLogger } from '@website-monitor/shared';
 
 const logger = createModuleLogger('Queue');
 

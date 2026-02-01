@@ -1,6 +1,6 @@
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { DATABASE_CONFIG, logger } from '@boat-monitor/shared';
+import { DATABASE_CONFIG, logger } from '@website-monitor/shared';
 import * as schema from './schema';
 
 const connectionString = DATABASE_CONFIG.URL;

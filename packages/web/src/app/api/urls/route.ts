@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { MonitoredUrlsRepository } from '@boat-monitor/database';
+import { MonitoredUrlsRepository } from '@website-monitor/database';
 
 const urlsRepo = new MonitoredUrlsRepository();
 

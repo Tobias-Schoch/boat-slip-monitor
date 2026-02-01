@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db } from '@boat-monitor/database/src/client';
-import { checks, changes, htmlSnapshots, screenshots } from '@boat-monitor/database/src/schema';
+import { db } from '@website-monitor/database/src/client';
+import { checks, changes, htmlSnapshots, screenshots } from '@website-monitor/database/src/schema';
 
 export async function POST() {
   try {

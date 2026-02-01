@@ -1,7 +1,7 @@
 import { eq, desc } from 'drizzle-orm';
 import { db } from '../client';
 import { checks } from '../schema';
-import type { CheckResult, CheckStatus } from '@boat-monitor/shared';
+import type { CheckResult, CheckStatus } from '@website-monitor/shared';
 
 export class ChecksRepository {
   async create(data: {

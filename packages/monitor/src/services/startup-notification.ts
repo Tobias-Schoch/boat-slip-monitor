@@ -1,4 +1,4 @@
-import { createModuleLogger, Priority } from '@boat-monitor/shared';
+import { createModuleLogger, Priority } from '@website-monitor/shared';
 import { settingsService } from './settings-service';
 import { telegramChannel } from '../notifier/channels/telegram';
 import { emailChannel } from '../notifier/channels/email';
@@ -18,8 +18,8 @@ export async function sendStartupNotification(): Promise<void> {
     const emailEnabled = !!(smtpUser && smtpFrom);
 
     const startupPayload = {
-      title: '✅ Monitor gestartet',
-      message: `Der Bootsliegeplatz-Monitor wurde erfolgreich gestartet und läuft jetzt.\n\nStartzeit: ${new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}\n\nDer Monitor überprüft nun automatisch alle konfigurierten URLs auf Änderungen.`,
+      title: '✅ Monitor Started',
+      message: `Website Change Monitor has been successfully started and is now running.\n\nStart time: ${new Date().toISOString()}\n\nThe monitor is now automatically checking all configured URLs for changes.`,
       priority: Priority.INFO,
       url: undefined,
       metadata: {}

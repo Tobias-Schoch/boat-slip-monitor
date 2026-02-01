@@ -1,7 +1,7 @@
 import { eq, and, lt } from 'drizzle-orm';
 import { db } from '../client';
 import { notifications } from '../schema';
-import type { Notification, NotificationChannel, NotificationStatus, Priority } from '@boat-monitor/shared';
+import type { Notification, NotificationChannel, NotificationStatus, Priority } from '@website-monitor/shared';
 
 export class NotificationsRepository {
   async create(data: {
