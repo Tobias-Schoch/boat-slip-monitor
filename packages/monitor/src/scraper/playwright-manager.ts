@@ -28,7 +28,13 @@ export class PlaywrightManager {
       }
 
     } catch (error) {
-      logger.error('Failed to initialize Playwright', { error });
+      logger.error('Failed to initialize Playwright', {
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        } : error
+      });
       throw error;
     }
   }
