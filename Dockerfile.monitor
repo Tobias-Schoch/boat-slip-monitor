@@ -60,6 +60,10 @@ COPY --from=builder --chown=monitor:nodejs /app/packages/monitor/package.json ./
 COPY --from=builder --chown=monitor:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=monitor:nodejs /app/package.json ./
 
+# Copy entrypoint script
+COPY --chown=monitor:nodejs docker-entrypoint-monitor.sh /app/
+RUN chmod +x /app/docker-entrypoint-monitor.sh
+
 # Create directories for data
 RUN mkdir -p /app/data/screenshots /app/logs
 RUN chown -R monitor:nodejs /app/data /app/logs
@@ -68,4 +72,4 @@ USER monitor
 
 EXPOSE 3001
 
-CMD ["node", "packages/monitor/dist/index.js"]
+CMD ["/app/docker-entrypoint-monitor.sh"]

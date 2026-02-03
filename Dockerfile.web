@@ -50,6 +50,10 @@ COPY --from=builder /app/packages/web/package.json ./packages/web/
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 
+# Copy entrypoint script
+COPY --chown=nextjs:nodejs docker-entrypoint-web.sh /app/
+RUN chmod +x /app/docker-entrypoint-web.sh
+
 # Create directories
 RUN mkdir -p /app/data/screenshots /app/logs && \
     chown -R nextjs:nodejs /app/data /app/logs
@@ -61,4 +65,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["npm", "run", "start", "--workspace=@website-monitor/web"]
+CMD ["/app/docker-entrypoint-web.sh"]
