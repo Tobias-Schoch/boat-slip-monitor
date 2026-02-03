@@ -10,6 +10,7 @@ export interface ScrapeResult {
   html: string;
   htmlHash: string;
   normalizedHtml: string;
+  normalizedHtmlHash: string;
   screenshotPath: string;
   responseTime: number;
   statusCode: number;
@@ -52,6 +53,7 @@ export class PageScraper {
         html: '',
         htmlHash: '',
         normalizedHtml: '',
+        normalizedHtmlHash: '',
         screenshotPath: '',
         responseTime,
         statusCode: 0,
@@ -90,6 +92,7 @@ export class PageScraper {
 
     // Normalize HTML for comparison
     const normalizedHtml = await this.normalizeHtml(page);
+    const normalizedHtmlHash = hashContent(normalizedHtml);
 
     // Take screenshot
     const screenshotPath = await this.takeScreenshot(page, url);
@@ -98,6 +101,7 @@ export class PageScraper {
       html,
       htmlHash,
       normalizedHtml,
+      normalizedHtmlHash,
       screenshotPath,
       statusCode
     };

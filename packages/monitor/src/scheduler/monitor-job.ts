@@ -57,13 +57,13 @@ export const monitorWorker = new Worker<CheckJobData>(
         return { success: false, error: scrapeResult.error };
       }
 
-      // Record successful check
+      // Record successful check (using normalizedHtmlHash for change detection)
       const check = await checksRepo.create({
         urlId,
         status: CheckStatus.SUCCESS,
         responseTime: scrapeResult.responseTime,
         statusCode: scrapeResult.statusCode,
-        htmlHash: scrapeResult.htmlHash,
+        htmlHash: scrapeResult.normalizedHtmlHash,
         screenshotPath: scrapeResult.screenshotPath
       });
 
@@ -117,30 +117,30 @@ export const monitorWorker = new Worker<CheckJobData>(
         }
       }
 
-      // Store new HTML snapshot if hash is different
+      // Store new HTML snapshot if hash is different (using normalizedHtmlHash)
       const existingSnapshot = await db
         .select()
         .from(htmlSnapshots)
-        .where(eq(htmlSnapshots.htmlHash, scrapeResult.htmlHash))
+        .where(eq(htmlSnapshots.htmlHash, scrapeResult.normalizedHtmlHash))
         .limit(1);
 
       if (existingSnapshot.length === 0) {
         await db.insert(htmlSnapshots).values({
           checkId: check.id,
-          htmlHash: scrapeResult.htmlHash,
+          htmlHash: scrapeResult.normalizedHtmlHash,
           content: scrapeResult.html,
           normalizedContent: scrapeResult.normalizedHtml
         });
       }
 
-      // Detect changes
+      // Detect changes (using normalizedHtmlHash for comparison)
       const changeResult = await changeDetector.detectChanges(
         previousHtmlNormalized,
         previousHtmlOriginal,
         scrapeResult.html,
         scrapeResult.normalizedHtml,
         previousHtmlHash,
-        scrapeResult.htmlHash
+        scrapeResult.normalizedHtmlHash
       );
 
       if (changeResult.hasChanged && changeResult.type) {
