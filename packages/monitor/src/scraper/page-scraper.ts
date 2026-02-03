@@ -130,6 +130,23 @@ export class PageScraper {
       document.querySelectorAll('img[width="1"][height="1"]').forEach(el => el.remove());
       // @ts-expect-error - Running in browser context
       document.querySelectorAll('iframe[style*="display: none"]').forEach(el => el.remove());
+
+      // Remove CCM19 prefetch/preload links (dynamic elements that change between requests)
+      // @ts-expect-error - Running in browser context
+      document.querySelectorAll('link[id^="ccm-"]').forEach(el => el.remove());
+
+      // Remove dynamic 'externerLink' class added by CCM19
+      // @ts-expect-error - Running in browser context
+      document.querySelectorAll('.externerLink').forEach(el => {
+        el.classList.remove('externerLink');
+      });
+
+      // Remove entire <head> section - it contains many dynamic elements
+      // (scripts, styles, meta tags, preload links) that cause false positives
+      // We only care about the visible content in <body>
+      // @ts-expect-error - Running in browser context
+      const head = document.querySelector('head');
+      if (head) head.remove();
     });
 
     // Get cleaned HTML
@@ -154,6 +171,9 @@ export class PageScraper {
 
     // Remove UUIDs
     normalized = normalized.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, 'UUID');
+
+    // Normalize CCM19 version parameters in URLs (timestamp-based)
+    normalized = normalized.replace(/[?&]v=\d+/g, '');
 
     // Aggressive whitespace normalization to handle formatting differences
     // 1. Remove whitespace between tags (handles formatted vs. minified HTML)
