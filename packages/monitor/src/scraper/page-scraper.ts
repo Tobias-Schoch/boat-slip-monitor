@@ -108,83 +108,57 @@ export class PageScraper {
   }
 
   private async normalizeHtml(page: Page): Promise<string> {
-    // Remove dynamic elements before extracting HTML
-    // Note: This function runs in browser context where DOM APIs are available
-    await page.evaluate(() => {
-      // Remove scripts and styles
-      // @ts-expect-error - Running in browser context where document is available
-      document.querySelectorAll('script, style, noscript').forEach(el => el.remove());
-
-      // Remove cookie banners and consent dialogs
-      const cookieSelectors = [
-        '[class*="cookie"]',
-        '[id*="cookie"]',
-        '[class*="consent"]',
-        '[id*="consent"]',
-        '[class*="gdpr"]',
-        '[id*="gdpr"]'
-      ];
-      cookieSelectors.forEach(selector => {
-        // @ts-expect-error - Running in browser context
-        document.querySelectorAll(selector).forEach(el => el.remove());
-      });
-
-      // Remove tracking pixels and analytics
-      // @ts-expect-error - Running in browser context
-      document.querySelectorAll('img[width="1"][height="1"]').forEach(el => el.remove());
-      // @ts-expect-error - Running in browser context
-      document.querySelectorAll('iframe[style*="display: none"]').forEach(el => el.remove());
-
-      // Remove CCM19 prefetch/preload links (dynamic elements that change between requests)
-      // @ts-expect-error - Running in browser context
-      document.querySelectorAll('link[id^="ccm-"]').forEach(el => el.remove());
-
-      // Remove dynamic 'externerLink' class added by CCM19
-      // @ts-expect-error - Running in browser context
-      document.querySelectorAll('.externerLink').forEach(el => {
-        el.classList.remove('externerLink');
-      });
-
-      // Remove entire <head> section - it contains many dynamic elements
-      // (scripts, styles, meta tags, preload links) that cause false positives
-      // We only care about the visible content in <body>
-      // @ts-expect-error - Running in browser context
-      const head = document.querySelector('head');
-      if (head) head.remove();
-    });
-
-    // Get cleaned HTML
-    const cleanedHtml = await page.content();
-
-    // Additional normalization (timestamps, session IDs, etc.)
-    return this.normalizeHtmlString(cleanedHtml);
+    // Get raw HTML and normalize via string processing
+    // This is more reliable than browser-based DOM manipulation
+    const html = await page.content();
+    return this.normalizeHtmlString(html);
   }
 
   private normalizeHtmlString(html: string): string {
     let normalized = html;
 
-    // Remove timestamps
+    // 1. Extract ONLY the <body> content (ignores <head>, <script>, <style>, <link> in head)
+    // This is the most robust approach - instead of removing things, we only keep what we care about
+    const bodyMatch = normalized.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    if (bodyMatch) {
+      normalized = bodyMatch[1];
+    }
+
+    // 2. Remove externerLink class (dynamically added by CCM19)
+    // Handle various positions: as sole class, at start, middle, or end of class list
+    normalized = normalized.replace(/\s*class=["']externerLink["']/gi, '');
+    normalized = normalized.replace(/(\s)externerLink(\s)/gi, '$1$2');
+    normalized = normalized.replace(/(\s)externerLink(["'])/gi, '$1$2');
+    normalized = normalized.replace(/(["'])externerLink(\s)/gi, '$1$2');
+
+    // 3. Remove inline scripts in body (if any remain)
+    normalized = normalized.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+
+    // 4. Remove style tags in body (if any)
+    normalized = normalized.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
+    // 5. Remove noscript tags
+    normalized = normalized.replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '');
+
+    // 6. Remove timestamps
     normalized = normalized.replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?/g, 'TIMESTAMP');
     normalized = normalized.replace(/\d{2}\.\d{2}\.\d{4}/g, 'DATE');
     normalized = normalized.replace(/\d{1,2}:\d{2}(:\d{2})?/g, 'TIME');
 
-    // Remove session IDs and tokens
+    // 7. Remove session IDs and tokens
     normalized = normalized.replace(/sessionid=[a-zA-Z0-9_-]+/gi, 'sessionid=SESSION');
     normalized = normalized.replace(/csrf[_-]?token=[a-zA-Z0-9_-]+/gi, 'csrf_token=TOKEN');
     normalized = normalized.replace(/token=[a-zA-Z0-9_-]+/gi, 'token=TOKEN');
 
-    // Remove UUIDs
+    // 8. Remove UUIDs
     normalized = normalized.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, 'UUID');
 
-    // Normalize CCM19 version parameters in URLs (timestamp-based)
+    // 9. Normalize CCM19 version parameters in URLs (timestamp-based)
     normalized = normalized.replace(/[?&]v=\d+/g, '');
 
-    // Aggressive whitespace normalization to handle formatting differences
-    // 1. Remove whitespace between tags (handles formatted vs. minified HTML)
+    // 10. Aggressive whitespace normalization
     normalized = normalized.replace(/>\s+</g, '><');
-    // 2. Replace all remaining whitespace (including newlines) with single space
     normalized = normalized.replace(/\s+/g, ' ');
-    // 3. Trim leading/trailing whitespace
     normalized = normalized.trim();
 
     return normalized;
