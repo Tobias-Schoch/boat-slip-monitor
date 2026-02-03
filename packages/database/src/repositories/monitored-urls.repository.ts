@@ -13,6 +13,7 @@ export class MonitoredUrlsRepository {
       checkInterval: row.checkInterval,
       enabled: row.enabled,
       lastChecked: row.lastChecked ?? undefined,
+      lastHtmlHash: row.lastHtmlHash ?? undefined,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt
     };
@@ -47,10 +48,14 @@ export class MonitoredUrlsRepository {
     return results[0] ? this.mapToMonitoredUrl(results[0]) : undefined;
   }
 
-  async updateLastChecked(id: string): Promise<void> {
+  async updateLastChecked(id: string, lastHtmlHash?: string): Promise<void> {
+    const updateData: any = { lastChecked: new Date(), updatedAt: new Date() };
+    if (lastHtmlHash) {
+      updateData.lastHtmlHash = lastHtmlHash;
+    }
     await db
       .update(monitoredUrls)
-      .set({ lastChecked: new Date(), updatedAt: new Date() })
+      .set(updateData)
       .where(eq(monitoredUrls.id, id));
   }
 

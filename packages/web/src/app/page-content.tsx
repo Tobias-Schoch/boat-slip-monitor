@@ -135,7 +135,7 @@ export function PageContent({ urls, recentChecks, recentChanges }: {
             <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/50">
               <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Alle Prüfungen</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Erkannte Änderungen</h3>
           </div>
           <div className="space-y-2">
             {checks.map((check, index) => (
@@ -153,7 +153,7 @@ export function PageContent({ urls, recentChecks, recentChanges }: {
               </div>
             )}
             {!hasMore && (
-              <p className="text-sm text-slate-500 dark:text-slate-400">Keine weiteren Prüfungen</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Keine weiteren Änderungen</p>
             )}
           </div>
         </div>

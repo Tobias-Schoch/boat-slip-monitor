@@ -40,11 +40,17 @@ export const monitorWorker = new Worker<CheckJobData>(
     const { urlId, url } = job.data;
 
     try {
+      // Get the URL record to check lastHtmlHash
+      const urlRecord = await urlsRepo.findById(urlId);
+      if (!urlRecord) {
+        throw new Error(`URL with id ${urlId} not found`);
+      }
+
       // Scrape the page
       const scrapeResult = await pageScraper.scrape(url);
 
       if (!scrapeResult.success) {
-        // Record failed check
+        // Record failed check (always save failures)
         await checksRepo.create({
           urlId,
           status: CheckStatus.FAILED,
@@ -53,84 +59,48 @@ export const monitorWorker = new Worker<CheckJobData>(
           error: scrapeResult.error
         });
 
+        // Still update lastChecked even on failure
+        await urlsRepo.updateLastChecked(urlId);
+
         logger.error('Check failed', { urlId, url, error: scrapeResult.error });
         return { success: false, error: scrapeResult.error };
       }
 
-      // Record successful check (using normalizedHtmlHash for change detection)
-      const check = await checksRepo.create({
-        urlId,
-        status: CheckStatus.SUCCESS,
-        responseTime: scrapeResult.responseTime,
-        statusCode: scrapeResult.statusCode,
-        htmlHash: scrapeResult.normalizedHtmlHash,
-        screenshotPath: scrapeResult.screenshotPath
-      });
-
-      // Update last checked time
-      await urlsRepo.updateLastChecked(urlId);
-
-      // Save screenshot to database if available
-      if (scrapeResult.screenshotPath) {
-        try {
-          const fs = require('fs');
-          const stats = fs.statSync(scrapeResult.screenshotPath);
-          await screenshotsRepo.create({
-            checkId: check.id,
-            filePath: scrapeResult.screenshotPath,
-            fileSize: stats.size,
-            width: 1920, // Default viewport width from scraper
-            height: 1080 // Approximate height
-          });
-        } catch (error) {
-          logger.error('Failed to save screenshot to database', { error });
-        }
-      }
-
-      // Get LAST check for this URL to find previous HTML
-      const previousChecks = await checksRepo.findByUrlId(urlId, 2); // Get last 2 checks
+      // Get previous HTML for change detection (using lastHtmlHash from URL)
       let previousHtmlNormalized: string | null = null;
       let previousHtmlOriginal: string | null = null;
-      let previousHtmlHash: string | null = null;
+      const previousHtmlHash = urlRecord.lastHtmlHash || null;
 
-      if (previousChecks.length > 1) {
-        // We have at least one previous check (current one is already saved)
-        // Actually, we just saved the current check, so previousChecks[0] is the current one
-        // We need to look at the check BEFORE the current one
-        // Let's get the last check that's NOT the current one
-        const olderChecks = await checksRepo.findByUrlId(urlId, 10); // Get more to be safe
-        const previousCheck = olderChecks.find(c => c.id !== check.id);
+      if (previousHtmlHash) {
+        const previousSnapshot = await db
+          .select()
+          .from(htmlSnapshots)
+          .where(eq(htmlSnapshots.htmlHash, previousHtmlHash))
+          .limit(1);
 
-        if (previousCheck && previousCheck.htmlHash) {
-          // Get the HTML snapshot for the previous check
-          const previousSnapshot = await db
-            .select()
-            .from(htmlSnapshots)
-            .where(eq(htmlSnapshots.htmlHash, previousCheck.htmlHash))
-            .limit(1);
-
-          if (previousSnapshot.length > 0) {
-            previousHtmlNormalized = previousSnapshot[0].normalizedContent;
-            previousHtmlOriginal = previousSnapshot[0].content;
-            previousHtmlHash = previousCheck.htmlHash;
-          }
+        if (previousSnapshot.length > 0) {
+          previousHtmlNormalized = previousSnapshot[0].normalizedContent;
+          previousHtmlOriginal = previousSnapshot[0].content;
         }
       }
 
-      // Store new HTML snapshot if hash is different (using normalizedHtmlHash)
-      const existingSnapshot = await db
-        .select()
-        .from(htmlSnapshots)
-        .where(eq(htmlSnapshots.htmlHash, scrapeResult.normalizedHtmlHash))
-        .limit(1);
+      // Store new HTML snapshot if hash is different
+      const hasHashChanged = previousHtmlHash !== scrapeResult.normalizedHtmlHash;
+      if (hasHashChanged) {
+        const existingSnapshot = await db
+          .select()
+          .from(htmlSnapshots)
+          .where(eq(htmlSnapshots.htmlHash, scrapeResult.normalizedHtmlHash))
+          .limit(1);
 
-      if (existingSnapshot.length === 0) {
-        await db.insert(htmlSnapshots).values({
-          checkId: check.id,
-          htmlHash: scrapeResult.normalizedHtmlHash,
-          content: scrapeResult.html,
-          normalizedContent: scrapeResult.normalizedHtml
-        });
+        if (existingSnapshot.length === 0) {
+          await db.insert(htmlSnapshots).values({
+            checkId: null,
+            htmlHash: scrapeResult.normalizedHtmlHash,
+            content: scrapeResult.html,
+            normalizedContent: scrapeResult.normalizedHtml
+          });
+        }
       }
 
       // Detect changes (using normalizedHtmlHash for comparison)
@@ -143,12 +113,49 @@ export const monitorWorker = new Worker<CheckJobData>(
         scrapeResult.normalizedHtmlHash
       );
 
+      // Always update lastChecked and lastHtmlHash on the URL
+      await urlsRepo.updateLastChecked(urlId, scrapeResult.normalizedHtmlHash);
+
+      // Only save check if there's an actual change
       if (changeResult.hasChanged && changeResult.type) {
         logger.warn('Change detected!', {
           type: changeResult.type,
           priority: changeResult.priority,
           confidence: changeResult.confidence
         });
+
+        // Create check record only when there's a change
+        const check = await checksRepo.create({
+          urlId,
+          status: CheckStatus.SUCCESS,
+          responseTime: scrapeResult.responseTime,
+          statusCode: scrapeResult.statusCode,
+          htmlHash: scrapeResult.normalizedHtmlHash,
+          screenshotPath: scrapeResult.screenshotPath
+        });
+
+        // Save screenshot to database
+        if (scrapeResult.screenshotPath) {
+          try {
+            const fs = require('fs');
+            const stats = fs.statSync(scrapeResult.screenshotPath);
+            await screenshotsRepo.create({
+              checkId: check.id,
+              filePath: scrapeResult.screenshotPath,
+              fileSize: stats.size,
+              width: 1920,
+              height: 1080
+            });
+          } catch (error) {
+            logger.error('Failed to save screenshot to database', { error });
+          }
+        }
+
+        // Update the HTML snapshot with the check ID
+        await db
+          .update(htmlSnapshots)
+          .set({ checkId: check.id })
+          .where(eq(htmlSnapshots.htmlHash, scrapeResult.normalizedHtmlHash));
 
         // Record change
         const change = await changesRepo.create({
@@ -175,27 +182,27 @@ export const monitorWorker = new Worker<CheckJobData>(
             matchedKeywords: changeResult.matchedKeywords
           }
         });
+
+        return {
+          success: true,
+          checkId: check.id,
+          hasChanged: true,
+          changeType: changeResult.type,
+          priority: changeResult.priority
+        };
       }
 
-      if (changeResult.hasChanged) {
-        logger.info('Change detected', {
-          url,
-          type: changeResult.type,
-          priority: changeResult.priority
-        });
-      }
+      // No change detected - don't save check
+      logger.debug('No change detected', { url });
 
       return {
         success: true,
-        checkId: check.id,
-        hasChanged: changeResult.hasChanged,
-        changeType: changeResult.type,
-        priority: changeResult.priority
+        hasChanged: false
       };
     } catch (error) {
       logger.error('Check job failed with error', { urlId, url, error });
 
-      // Record error check
+      // Record error check (always save errors)
       await checksRepo.create({
         urlId,
         status: CheckStatus.ERROR,

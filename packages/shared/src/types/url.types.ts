@@ -8,6 +8,7 @@ export const MonitoredUrlSchema = z.object({
   checkInterval: z.number().default(5),
   enabled: z.boolean().default(true),
   lastChecked: z.date().optional(),
+  lastHtmlHash: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date()
 });

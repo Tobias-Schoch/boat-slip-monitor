@@ -8,6 +8,7 @@ export const monitoredUrls = pgTable('monitored_urls', {
   checkInterval: integer('check_interval').default(5).notNull(),
   enabled: boolean('enabled').default(true).notNull(),
   lastChecked: timestamp('last_checked', { withTimezone: true }),
+  lastHtmlHash: varchar('last_html_hash', { length: 64 }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
 });
