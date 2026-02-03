@@ -84,25 +84,6 @@ export const monitorWorker = new Worker<CheckJobData>(
         }
       }
 
-      // Store new HTML snapshot if hash is different
-      const hasHashChanged = previousHtmlHash !== scrapeResult.normalizedHtmlHash;
-      if (hasHashChanged) {
-        const existingSnapshot = await db
-          .select()
-          .from(htmlSnapshots)
-          .where(eq(htmlSnapshots.htmlHash, scrapeResult.normalizedHtmlHash))
-          .limit(1);
-
-        if (existingSnapshot.length === 0) {
-          await db.insert(htmlSnapshots).values({
-            checkId: null,
-            htmlHash: scrapeResult.normalizedHtmlHash,
-            content: scrapeResult.html,
-            normalizedContent: scrapeResult.normalizedHtml
-          });
-        }
-      }
-
       // Detect changes (using normalizedHtmlHash for comparison)
       const changeResult = await changeDetector.detectChanges(
         previousHtmlNormalized,
@@ -151,11 +132,21 @@ export const monitorWorker = new Worker<CheckJobData>(
           }
         }
 
-        // Update the HTML snapshot with the check ID
-        await db
-          .update(htmlSnapshots)
-          .set({ checkId: check.id })
-          .where(eq(htmlSnapshots.htmlHash, scrapeResult.normalizedHtmlHash));
+        // Store HTML snapshot with check ID
+        const existingSnapshot = await db
+          .select()
+          .from(htmlSnapshots)
+          .where(eq(htmlSnapshots.htmlHash, scrapeResult.normalizedHtmlHash))
+          .limit(1);
+
+        if (existingSnapshot.length === 0) {
+          await db.insert(htmlSnapshots).values({
+            checkId: check.id,
+            htmlHash: scrapeResult.normalizedHtmlHash,
+            content: scrapeResult.html,
+            normalizedContent: scrapeResult.normalizedHtml
+          });
+        }
 
         // Record change
         const change = await changesRepo.create({
