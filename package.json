@@ -15,7 +15,8 @@
     "test": "turbo run test",
     "migrate": "npm run migrate --workspace=@boat-monitor/database",
     "monitor": "npm run dev --workspace=@boat-monitor/monitor",
-    "web": "npm run dev --workspace=@boat-monitor/web"
+    "web": "npm run dev --workspace=@boat-monitor/web",
+    "web:migrate": "npm run migrate && npm run start --workspace=@boat-monitor/web"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

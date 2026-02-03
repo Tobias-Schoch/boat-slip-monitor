@@ -52,6 +52,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/packages/shared/dist ./packages/s
 COPY --from=builder --chown=nextjs:nodejs /app/packages/database/dist ./packages/database/dist
 COPY --from=builder --chown=nextjs:nodejs /app/packages/web/.next ./packages/web/.next
 
+# Copy startup script
+COPY --chown=nextjs:nodejs packages/web/start-with-migrations.js ./packages/web/
+RUN chmod +x ./packages/web/start-with-migrations.js
+
 # Create logs directory
 RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
 
@@ -62,4 +66,4 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["npm", "run", "start", "--workspace=@boat-monitor/web"]
+CMD ["node", "packages/web/start-with-migrations.js"]
