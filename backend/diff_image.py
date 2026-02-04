@@ -277,10 +277,10 @@ def _generate_diff_html(
         </div>
     '''
 
-    return DIFF_HTML_TEMPLATE.format(
-        title_bar=title_bar,
-        diff_lines='\n'.join(lines_html)
-    )
+    html = DIFF_HTML_TEMPLATE
+    html = html.replace('{title_bar}', title_bar)
+    html = html.replace('{diff_lines}', '\n'.join(lines_html))
+    return html
 
 
 def _convert_html_diff_to_plain(html_diff: str) -> str:
