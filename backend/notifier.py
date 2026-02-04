@@ -361,6 +361,16 @@ class NotificationManager:
             keywords_str = ", ".join(change.matched_keywords)
             message += f"🔍 Keywords: {keywords_str}\n\n"
 
+        # Include diff text if available (shortened for Telegram)
+        if change.diff:
+            import re
+            diff_text = re.sub('<[^<]+?>', '', change.diff)
+            diff_text = diff_text.strip()
+            if len(diff_text) > 200:
+                diff_text = diff_text[:200] + "..."
+            if diff_text:
+                message += f"<b>Änderungen:</b>\n<code>{diff_text}</code>\n\n"
+
         message += f"🔗 <a href='{url}'>Zur Seite</a>\n"
         message += f"📊 <a href='http://217.72.203.69:3000'>Zum Dashboard</a>"
 
@@ -375,6 +385,17 @@ class NotificationManager:
         if change.matched_keywords:
             keywords_str = ", ".join(change.matched_keywords)
             body += f"Matched Keywords: {keywords_str}\n\n"
+
+        # Include diff text if available
+        if change.diff:
+            # Strip HTML tags and limit length for email body
+            import re
+            diff_text = re.sub('<[^<]+?>', '', change.diff)
+            diff_text = diff_text.strip()
+            if len(diff_text) > 500:
+                diff_text = diff_text[:500] + "...\n[Diff gekürzt - siehe Bild oder Dashboard]"
+            if diff_text:
+                body += f"Änderungen:\n{diff_text}\n\n"
 
         body += f"Link: {url}\n"
         body += f"Dashboard: http://217.72.203.69:3000\n\n"
