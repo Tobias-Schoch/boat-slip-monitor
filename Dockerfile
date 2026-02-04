@@ -22,30 +22,23 @@ FROM python:3.12-slim AS backend-builder
 
 WORKDIR /app
 
-# Install system dependencies for Playwright
-RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy requirements and install Python packages
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright browsers
+# Install Playwright browsers (without deps for now)
 RUN playwright install chromium
-RUN playwright install-deps chromium
 
 # Stage 3: Runtime
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install runtime dependencies
+# Install runtime dependencies for Playwright/Chromium
 RUN apt-get update && apt-get install -y \
     curl \
-    chromium \
-    chromium-driver \
+    wget \
+    ca-certificates \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
@@ -64,7 +57,11 @@ RUN apt-get update && apt-get install -y \
     libxfixes3 \
     libxkbcommon0 \
     libxrandr2 \
+    libxshmfence1 \
     xdg-utils \
+    libu2f-udev \
+    libvulkan1 \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python packages from builder
