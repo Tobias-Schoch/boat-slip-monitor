@@ -283,6 +283,39 @@ def _generate_diff_html(
     )
 
 
+def _convert_html_diff_to_plain(html_diff: str) -> str:
+    """Convert HTML diff to plain text diff format."""
+    import re
+    from html import unescape
+
+    lines = []
+
+    # Split by lines and process each
+    for line in html_diff.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+
+        # Remove HTML tags but preserve the text
+        text = re.sub(r'<[^>]+>', '', line)
+        text = unescape(text).strip()
+
+        if not text:
+            continue
+
+        # Check for "removed" or "deleted" class in original HTML
+        if 'class="removed"' in line or 'class="deletion"' in line:
+            lines.append(f'- {text}')
+        # Check for "added" or "addition" class
+        elif 'class="added"' in line or 'class="addition"' in line:
+            lines.append(f'+ {text}')
+        # Regular context line
+        else:
+            lines.append(f'  {text}')
+
+    return '\n'.join(lines)
+
+
 async def generate_diff_image(
     diff_text: str,
     url_name: str,
@@ -294,7 +327,7 @@ async def generate_diff_image(
     Generate a diff image matching the web UI style.
 
     Args:
-        diff_text: The diff text with +/- prefixes
+        diff_text: The diff text (HTML or plain text with +/- prefixes)
         url_name: Name of the monitored URL
         description: Change description
         priority: Priority level (CRITICAL, IMPORTANT, INFO)
@@ -304,6 +337,10 @@ async def generate_diff_image(
         PNG image bytes
     """
     from playwright.async_api import async_playwright
+
+    # Convert HTML diff to plain text if needed
+    if '<' in diff_text and '>' in diff_text:
+        diff_text = _convert_html_diff_to_plain(diff_text)
 
     html = _generate_diff_html(diff_text, url_name, description, priority)
 
