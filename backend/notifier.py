@@ -150,9 +150,11 @@ class NotificationManager:
     async def _generate_diff_image(self, change: Change, url_name: str) -> Optional[bytes]:
         """Generate diff image if diff is available."""
         if not change.diff:
+            logger.info("No diff available, skipping image generation")
             return None
 
         try:
+            logger.info(f"Generating diff image for {url_name}, diff length: {len(change.diff)}")
             image_bytes = await generate_diff_image(
                 diff_text=change.diff,
                 url_name=url_name,
@@ -162,7 +164,7 @@ class NotificationManager:
             logger.info(f"Generated diff image ({len(image_bytes)} bytes)")
             return image_bytes
         except Exception as e:
-            logger.error(f"Failed to generate diff image: {e}")
+            logger.exception(f"Failed to generate diff image: {e}")
             return None
 
     async def _send_telegram(
@@ -195,13 +197,24 @@ class NotificationManager:
 
         async def send():
             if diff_image:
+                # Telegram photo caption limit is 1024 chars
+                caption = message if len(message) <= 1024 else message[:1000] + "..."
+
                 # Send image with caption
                 await self.telegram_bot.send_photo(
                     chat_id=settings.telegram_chat_id,
                     photo=InputFile(io.BytesIO(diff_image), filename='diff.png'),
-                    caption=message,
+                    caption=caption,
                     parse_mode='HTML'
                 )
+
+                # If message was truncated, send full message as follow-up
+                if len(message) > 1024:
+                    await self.telegram_bot.send_message(
+                        chat_id=settings.telegram_chat_id,
+                        text=message,
+                        parse_mode='HTML'
+                    )
             else:
                 # Send text only
                 await self.telegram_bot.send_message(
@@ -240,34 +253,57 @@ class NotificationManager:
         diff_image = await self._generate_diff_image(change, url_name)
 
         async def send():
-            # Use mixed for attachments, related for inline images
-            msg = MIMEMultipart('mixed')
-            msg['Subject'] = subject
-            msg['From'] = settings.smtp_from
-            msg['To'] = settings.smtp_to
-
-            # Create the body part
-            body_part = MIMEMultipart('alternative')
-            text_part = MIMEText(body, 'plain')
-
-            # HTML body with inline image reference if available
             if diff_image:
-                html_body = body.replace('\n', '<br>')
-                html_body += '<br><br><img src="cid:diff_image" style="max-width: 100%; border-radius: 12px;">'
+                # For inline images: mixed > related > alternative
+                msg = MIMEMultipart('mixed')
+                msg['Subject'] = subject
+                msg['From'] = settings.smtp_from
+                msg['To'] = settings.smtp_to
+
+                # Related part for HTML + inline image
+                related_part = MIMEMultipart('related')
+
+                # Alternative part for plain text / HTML
+                alt_part = MIMEMultipart('alternative')
+                text_part = MIMEText(body, 'plain')
+
+                html_body = f"""
+                <html>
+                <body style="font-family: sans-serif; background: #1e293b; color: #f1f5f9; padding: 20px;">
+                    <div style="max-width: 600px; margin: 0 auto;">
+                        {body.replace(chr(10), '<br>')}
+                        <br><br>
+                        <img src="cid:diff_image" style="max-width: 100%; border-radius: 12px; border: 1px solid #334155;">
+                    </div>
+                </body>
+                </html>
+                """
                 html_part = MIMEText(html_body, 'html')
-            else:
-                html_part = MIMEText(body.replace('\n', '<br>'), 'html')
 
-            body_part.attach(text_part)
-            body_part.attach(html_part)
-            msg.attach(body_part)
+                alt_part.attach(text_part)
+                alt_part.attach(html_part)
+                related_part.attach(alt_part)
 
-            # Attach diff image if available
-            if diff_image:
+                # Attach image to related part
                 image_part = MIMEImage(diff_image, _subtype='png')
                 image_part.add_header('Content-ID', '<diff_image>')
                 image_part.add_header('Content-Disposition', 'inline', filename='diff.png')
-                msg.attach(image_part)
+                related_part.attach(image_part)
+
+                msg.attach(related_part)
+            else:
+                # Simple email without image
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = subject
+                msg['From'] = settings.smtp_from
+                msg['To'] = settings.smtp_to
+
+                text_part = MIMEText(body, 'plain')
+                html_part = MIMEText(body.replace('\n', '<br>'), 'html')
+                msg.attach(text_part)
+                msg.attach(html_part)
+
+            logger.info(f"Sending email to {settings.smtp_to} via {settings.smtp_host}:{settings.smtp_port}")
 
             await aiosmtplib.send(
                 msg,
