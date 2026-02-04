@@ -515,7 +515,7 @@ async def event_stream(db: AsyncSession = Depends(get_db)):
     async def generate():
         """Generate SSE events."""
         # Send initial connection message
-        yield f"data: {json.dumps({'type': 'connected', 'timestamp': datetime.utcnow().isoformat()})}\n\n"
+        yield f"data: {json.dumps({'type': 'connected', 'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')})}\n\n"
 
         last_check_id = None
         last_change_id = None
@@ -541,7 +541,7 @@ async def event_stream(db: AsyncSession = Depends(get_db)):
                             'url_id': latest_check.url_id,
                             'url_name': latest_check.url.name if latest_check.url else None,
                             'status': latest_check.status.value,
-                            'timestamp': latest_check.timestamp.isoformat(),
+                            'timestamp': latest_check.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'),
                             'duration_ms': latest_check.duration_ms
                         }
                     }
@@ -567,7 +567,7 @@ async def event_stream(db: AsyncSession = Depends(get_db)):
                             'priority': latest_change.priority.value,
                             'description': latest_change.description,
                             'url_name': latest_change.check.url.name if latest_change.check and latest_change.check.url else None,
-                            'timestamp': latest_change.created_at.isoformat()
+                            'timestamp': latest_change.created_at.strftime('%Y-%m-%dT%H:%M:%SZ')
                         }
                     }
                     yield f"data: {json.dumps(event_data)}\n\n"
