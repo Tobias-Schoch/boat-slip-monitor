@@ -126,6 +126,8 @@ class CheckScheduler:
             status_code=scrape_result.status_code,
             error=scrape_result.error
         )
+        # Set the url relationship explicitly for downstream use
+        check.url = url
         session.add(check)
         await session.flush()
 
@@ -183,6 +185,8 @@ class CheckScheduler:
                 diff=detection_result.diff,
                 matched_keywords=detection_result.matched_keywords
             )
+            # Set the check relationship explicitly for the notifier
+            change.check = check
             session.add(change)
             await session.flush()
 

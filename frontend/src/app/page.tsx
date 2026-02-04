@@ -162,7 +162,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-card/60 -z-10" />
         <div className="container mx-auto px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex gap-1 md:gap-2 overflow-x-auto">
+            <div className="flex gap-1 md:gap-2">
               {tabs.map((tab) => (
                 <motion.button
                   key={tab.id}

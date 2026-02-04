@@ -37,19 +37,18 @@ class NotificationManager:
         session
     ) -> bool:
         """
-        Send notification based on priority.
+        Send notification for any change.
 
-        Priority routing:
-        - CRITICAL: Telegram + Email
-        - IMPORTANT: Telegram + Email
-        - INFO: Dashboard only (no notification)
+        Sends to all configured channels (Telegram and/or Email)
+        for all priority levels (CRITICAL, IMPORTANT, INFO).
 
         Returns:
             True if at least one notification succeeded
         """
-        if change.priority == Priority.INFO:
-            logger.info("INFO priority change - no notification sent")
-            return True
+        logger.info(f"=== NOTIFICATION REQUEST ===")
+        logger.info(f"URL: {url_name}, Priority: {change.priority.value}")
+        logger.info(f"Telegram configured: token={'YES' if settings.telegram_bot_token else 'NO'}, chat_id={'YES' if settings.telegram_chat_id else 'NO'}")
+        logger.info(f"Email configured: smtp_host={'YES' if settings.smtp_host else 'NO'}, smtp_to={'YES' if settings.smtp_to else 'NO'}")
 
         # Check rate limiting
         rate_limit_key = f"{change.check.url_id}_{change.priority.value}"
@@ -59,14 +58,21 @@ class NotificationManager:
 
         # Determine channels based on priority
         channels = self._get_channels_for_priority(change.priority)
+        logger.info(f"Channels to use: {[c.value for c in channels] if channels else 'NONE - check configuration!'}")
+
+        if not channels:
+            logger.warning("No notification channels configured! Configure Telegram or Email in settings.")
+            return False
 
         success_count = 0
         for channel in channels:
             try:
                 if channel == NotificationChannel.TELEGRAM:
                     success = await self._send_telegram(change, url_name, url, session)
+                    logger.info(f"Telegram notification: {'SUCCESS' if success else 'FAILED'}")
                 elif channel == NotificationChannel.EMAIL:
                     success = await self._send_email(change, url_name, url, session)
+                    logger.info(f"Email notification: {'SUCCESS' if success else 'FAILED'}")
                 else:
                     success = False
 
@@ -74,31 +80,24 @@ class NotificationManager:
                     success_count += 1
 
             except Exception as e:
-                logger.error(f"Failed to send {channel.value} notification: {e}")
+                logger.exception(f"Failed to send {channel.value} notification: {e}")
 
         # Update rate limit cache
         if success_count > 0:
             self._rate_limit_cache[rate_limit_key] = datetime.now()
 
+        logger.info(f"=== NOTIFICATION RESULT: {success_count}/{len(channels)} sent ===")
         return success_count > 0
 
     def _get_channels_for_priority(self, priority: Priority) -> list[NotificationChannel]:
         """Get notification channels for a given priority."""
         channels = []
 
-        if priority == Priority.CRITICAL:
-            # Critical: Telegram + Email
-            if settings.telegram_bot_token:
-                channels.append(NotificationChannel.TELEGRAM)
-            if settings.smtp_host:
-                channels.append(NotificationChannel.EMAIL)
-
-        elif priority == Priority.IMPORTANT:
-            # Important: Telegram + Email
-            if settings.telegram_bot_token:
-                channels.append(NotificationChannel.TELEGRAM)
-            if settings.smtp_host:
-                channels.append(NotificationChannel.EMAIL)
+        # Send notifications for all priorities (CRITICAL, IMPORTANT, INFO)
+        if settings.telegram_bot_token:
+            channels.append(NotificationChannel.TELEGRAM)
+        if settings.smtp_host:
+            channels.append(NotificationChannel.EMAIL)
 
         return channels
 
