@@ -6,7 +6,6 @@ import { Search, Clock } from 'lucide-react'
 import type { Check, Change, MonitoredUrl } from '@/lib/useApi'
 import { CheckCard } from './CheckCard'
 import { ChangeCard } from './ChangeCard'
-import { StatsSection } from './StatsSection'
 import { FilterButtons, type FilterButton } from './ui/FilterButtons'
 import { EmptyState } from './ui/EmptyState'
 
@@ -44,8 +43,6 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
 
   const hasMoreChanges = filter === 'all' && filteredChanges.length > COLLAPSED_LIMIT
 
-  const criticalCount = changes.filter((c) => c.priority === 'CRITICAL').length
-
   // Get the last check for each URL
   const lastCheckPerUrl = useMemo(() => {
     const urlMap = new Map<string, typeof checks[0]>()
@@ -60,14 +57,6 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
 
   return (
     <div className="space-y-10">
-      {/* Stats Overview */}
-      <StatsSection
-        totalChecks={checks.length}
-        changesDetected={changes.length}
-        criticalChanges={criticalCount}
-        urlsMonitored={urls.length}
-      />
-
       {/* Recent Changes */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
