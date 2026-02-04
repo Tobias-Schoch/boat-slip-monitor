@@ -263,7 +263,8 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
                     {change.diff.split('\n').map((line, i) => {
                       const isAddition = line.startsWith('+ ')
                       const isDeletion = line.startsWith('- ')
-                      const lineContent = line.slice(2) || line
+                      // Only slice prefix if it's actually a diff line
+                      const lineContent = (isAddition || isDeletion) ? line.slice(2) : line
 
                       if (!line.trim()) return null
 
