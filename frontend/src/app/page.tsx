@@ -31,7 +31,7 @@ const tabs: { id: TabId; label: string }[] = [
   { id: 'changes', label: 'Änderungen' },
   { id: 'urls', label: 'URLs' },
   { id: 'difftester', label: 'Diff-Tester' },
-  { id: 'test', label: 'Test' },
+  { id: 'test', label: 'Notification-Test' },
   { id: 'settings', label: 'Einstellungen' },
 ]
 

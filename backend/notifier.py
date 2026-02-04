@@ -321,14 +321,25 @@ class NotificationManager:
 
             logger.info(f"Sending email to {settings.smtp_to} via {settings.smtp_host}:{settings.smtp_port}")
 
-            await aiosmtplib.send(
-                msg,
-                hostname=settings.smtp_host,
-                port=settings.smtp_port,
-                username=settings.smtp_user,
-                password=settings.smtp_password,
-                start_tls=True
-            )
+            # Port 465 uses implicit SSL, port 587 uses STARTTLS
+            if settings.smtp_port == 465:
+                await aiosmtplib.send(
+                    msg,
+                    hostname=settings.smtp_host,
+                    port=settings.smtp_port,
+                    username=settings.smtp_user,
+                    password=settings.smtp_password,
+                    use_tls=True
+                )
+            else:
+                await aiosmtplib.send(
+                    msg,
+                    hostname=settings.smtp_host,
+                    port=settings.smtp_port,
+                    username=settings.smtp_user,
+                    password=settings.smtp_password,
+                    start_tls=True
+                )
 
         return await self._send_with_retry(send, notification, "Email", change, session)
 
@@ -350,7 +361,8 @@ class NotificationManager:
             keywords_str = ", ".join(change.matched_keywords)
             message += f"🔍 Keywords: {keywords_str}\n\n"
 
-        message += f"🔗 <a href='{url}'>Zur Seite</a>"
+        message += f"🔗 <a href='{url}'>Zur Seite</a>\n"
+        message += f"📊 <a href='http://217.72.203.69:3000'>Zum Dashboard</a>"
 
         return message
 
@@ -364,7 +376,8 @@ class NotificationManager:
             keywords_str = ", ".join(change.matched_keywords)
             body += f"Matched Keywords: {keywords_str}\n\n"
 
-        body += f"Link: {url}\n\n"
+        body += f"Link: {url}\n"
+        body += f"Dashboard: http://217.72.203.69:3000\n\n"
         body += "---\n"
         body += "Boat Slip Monitor\n"
 
