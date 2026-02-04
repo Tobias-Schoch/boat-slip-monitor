@@ -183,15 +183,19 @@ async def get_setup_status():
 
 
 @app.get("/api/settings")
-async def get_settings(db: AsyncSession = Depends(get_db)):
-    """Get current settings (with passwords masked)."""
+async def get_settings(
+    show_secrets: bool = False,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get current settings (with passwords optionally masked)."""
     settings_dict = settings.to_dict()
 
-    # Mask sensitive values
-    if settings_dict.get('telegram_bot_token'):
-        settings_dict['telegram_bot_token'] = '***MASKED***'
-    if settings_dict.get('smtp_password'):
-        settings_dict['smtp_password'] = '***MASKED***'
+    # Mask sensitive values unless explicitly requested
+    if not show_secrets:
+        if settings_dict.get('telegram_bot_token'):
+            settings_dict['telegram_bot_token'] = '***MASKED***'
+        if settings_dict.get('smtp_password'):
+            settings_dict['smtp_password'] = '***MASKED***'
 
     return settings_dict
 
@@ -205,6 +209,15 @@ async def update_settings(
     try:
         # Convert to dict
         data = settings_data.dict()
+
+        # Don't overwrite masked values - keep existing ones
+        current_settings = settings.to_dict()
+
+        if data.get('telegram_bot_token') == '***MASKED***':
+            data['telegram_bot_token'] = current_settings.get('telegram_bot_token')
+
+        if data.get('smtp_password') == '***MASKED***':
+            data['smtp_password'] = current_settings.get('smtp_password')
 
         # Save to database
         await settings.save_to_database(db, data)
@@ -250,6 +263,67 @@ async def get_url(url_id: str, db: AsyncSession = Depends(get_db)):
     if not url:
         raise HTTPException(status_code=404, detail="URL not found")
     return url
+
+
+class UrlUpdateRequest(BaseModel):
+    """Request model for updating URL."""
+    name: Optional[str] = None
+    url: Optional[str] = None
+    description: Optional[str] = None
+    enabled: Optional[bool] = None
+    check_interval_minutes: Optional[int] = None
+
+
+@app.put("/api/urls/{url_id}", response_model=UrlResponse)
+async def update_url(
+    url_id: str,
+    update_data: UrlUpdateRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Update a monitored URL."""
+    result = await db.execute(
+        select(MonitoredUrl).where(MonitoredUrl.id == url_id)
+    )
+    url = result.scalar_one_or_none()
+    if not url:
+        raise HTTPException(status_code=404, detail="URL not found")
+
+    # Update fields if provided
+    if update_data.name is not None:
+        url.name = update_data.name
+    if update_data.url is not None:
+        url.url = update_data.url
+    if update_data.description is not None:
+        url.description = update_data.description
+    if update_data.enabled is not None:
+        url.enabled = update_data.enabled
+    if update_data.check_interval_minutes is not None:
+        url.check_interval_minutes = update_data.check_interval_minutes
+
+    await db.commit()
+    await db.refresh(url)
+    return url
+
+
+@app.patch("/api/urls/{url_id}/toggle")
+async def toggle_url(url_id: str, db: AsyncSession = Depends(get_db)):
+    """Toggle URL enabled/disabled state."""
+    result = await db.execute(
+        select(MonitoredUrl).where(MonitoredUrl.id == url_id)
+    )
+    url = result.scalar_one_or_none()
+    if not url:
+        raise HTTPException(status_code=404, detail="URL not found")
+
+    url.enabled = not url.enabled
+    await db.commit()
+    await db.refresh(url)
+
+    return {
+        "success": True,
+        "enabled": url.enabled,
+        "message": f"URL {'enabled' if url.enabled else 'disabled'}"
+    }
 
 
 @app.get("/api/checks", response_model=List[CheckResponse])

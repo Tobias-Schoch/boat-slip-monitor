@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // Use relative URLs when running from the same server (Docker container)
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
@@ -14,6 +14,7 @@ export function SetupForm({ onComplete }: SetupFormProps) {
     'telegram'
   )
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
@@ -40,6 +41,29 @@ export function SetupForm({ onComplete }: SetupFormProps) {
     notification_cooldown_minutes: 10,
     max_notification_retries: 3,
   })
+
+  useEffect(() => {
+    loadCurrentSettings()
+  }, [])
+
+  const loadCurrentSettings = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`${API_BASE}/api/settings`)
+      if (response.ok) {
+        const data = await response.json()
+        // Merge with existing formData to preserve defaults
+        setFormData(prev => ({
+          ...prev,
+          ...data
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to load settings:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,6 +104,17 @@ export function SetupForm({ onComplete }: SetupFormProps) {
       setError(err instanceof Error ? err.message : 'Unknown error')
       setSaving(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-muted">Loading settings...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
