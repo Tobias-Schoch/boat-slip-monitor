@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Send, Mail, MessageCircle, CheckCircle, XCircle } from 'lucide-react'
 import { Button } from './ui/Button'
-import { BaseCard } from './ui/BaseCard'
 
 type TestResult = {
   status: 'success' | 'error'
@@ -102,7 +101,7 @@ export function TestNotifications() {
 
         <div className="grid md:grid-cols-2 gap-4">
           {/* Telegram Test */}
-          <BaseCard>
+          <div className="glass-ultra rounded-xl p-6 border border-white/10 hover:border-blue-500/30 transition-colors">
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400">
                 <MessageCircle className="w-6 h-6" />
@@ -122,10 +121,10 @@ export function TestNotifications() {
                 {telegramResult && <ResultMessage result={telegramResult} />}
               </div>
             </div>
-          </BaseCard>
+          </div>
 
           {/* Email Test */}
-          <BaseCard>
+          <div className="glass-ultra rounded-xl p-6 border border-white/10 hover:border-purple-500/30 transition-colors">
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400">
                 <Mail className="w-6 h-6" />
@@ -145,7 +144,7 @@ export function TestNotifications() {
                 {emailResult && <ResultMessage result={emailResult} />}
               </div>
             </div>
-          </BaseCard>
+          </div>
         </div>
       </div>
 
