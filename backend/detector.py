@@ -120,9 +120,9 @@ class ChangeDetector:
                         f'🚨 CRITICAL: NEW Form detected! Type: {current_form_detection.form_type}'
                     )
                     description = (
-                        '📄 PDF-Antragsformular gefunden! Download jetzt möglich.'
+                        'PDF-Antragsformular gefunden! Download jetzt möglich.'
                         if current_form_detection.form_type == 'PDF'
-                        else '📝 Online-Anmeldeformular entdeckt! Du kannst dich jetzt bewerben.'
+                        else 'Online-Anmeldeformular entdeckt! Du kannst dich jetzt bewerben.'
                     )
                     return ChangeDetectionResult(
                         has_changed=True,
@@ -171,7 +171,7 @@ class ChangeDetector:
                 change_type=ChangeType.CONTENT,
                 priority=Priority.INFO,
                 confidence=1 - similarity,
-                description='📝 Die Seite wurde aktualisiert. Schau dir die Änderungen im Screenshot an.',
+                description='Die Seite wurde aktualisiert.',
                 diff=self.generate_diff(
                     previous_html_original or previous_html_normalized,
                     current_html
@@ -256,11 +256,11 @@ class ChangeDetector:
 
         if matched_critical:
             # More user-friendly descriptions based on keywords
-            description = '🚨 Wichtige Änderung auf der Seite!'
+            description = 'Wichtige Änderung auf der Seite!'
             if any(k in ['warteliste', 'anmeldung'] for k in matched_critical):
-                description = '⚠️ Die Warteliste könnte bald öffnen! Neue Informationen zur Anmeldung gefunden.'
+                description = 'Die Warteliste könnte bald öffnen! Neue Informationen zur Anmeldung gefunden.'
             elif any(k in ['formular', 'antrag'] for k in matched_critical):
-                description = '📝 Anmeldeformular wurde gefunden! Jetzt könnte eine Bewerbung möglich sein.'
+                description = 'Anmeldeformular wurde gefunden! Jetzt könnte eine Bewerbung möglich sein.'
 
             return KeywordMatchResult(
                 matched=True,
@@ -271,11 +271,11 @@ class ChangeDetector:
             )
 
         if matched_important:
-            description = 'ℹ️ Relevante Änderung auf der Seite gefunden.'
+            description = 'Relevante Änderung auf der Seite gefunden.'
             if any(k in ['verfügbar', 'available'] for k in matched_important):
-                description = '✅ Neue Verfügbarkeits-Informationen wurden veröffentlicht.'
+                description = 'Neue Verfügbarkeits-Informationen wurden veröffentlicht.'
             elif any(k in ['termin', 'öffnung'] for k in matched_important):
-                description = '📅 Neue Informationen zu Terminen oder Öffnungszeiten.'
+                description = 'Neue Informationen zu Terminen oder Öffnungszeiten.'
 
             return KeywordMatchResult(
                 matched=True,
@@ -294,11 +294,15 @@ class ChangeDetector:
         )
 
     def generate_diff(self, old_content: str, new_content: str, max_length: int = 5000) -> str:
-        """Generate human-readable diff between old and new content."""
+        """Generate human-readable diff between old and new content.
+
+        Shows the actual differences without aggressive cleaning,
+        so users can see exactly what changed.
+        """
         try:
-            # Clean HTML to remove noise (head, style, script, link, ccm19, etc.)
-            old_cleaned = clean_html_for_diff(old_content)
-            new_cleaned = clean_html_for_diff(new_content)
+            # Light cleaning only - remove head/script/style but keep body content
+            old_cleaned = self._light_clean_for_diff(old_content)
+            new_cleaned = self._light_clean_for_diff(new_content)
 
             # Use diff_match_patch for diff generation
             diffs = self.dmp.diff_main(old_cleaned, new_cleaned)
@@ -309,10 +313,15 @@ class ChangeDetector:
             for op, text in diffs:
                 # Truncate very long text blocks
                 display_text = text[:500] + '...' if len(text) > 500 else text
-                # Clean up whitespace for display
-                display_text = display_text.strip()
-                if not display_text:
-                    continue
+
+                # Keep whitespace visible but normalize for display
+                display_text = display_text.replace('\n', '↵\n').replace('\t', '→')
+
+                if not display_text.strip():
+                    # Show whitespace-only changes
+                    display_text = repr(text[:100])[1:-1]  # Show escaped version
+                    if len(text) > 100:
+                        display_text += '...'
 
                 if op == -1:  # Deletion
                     lines.append(f"- {display_text}")
@@ -324,12 +333,38 @@ class ChangeDetector:
 
             # Truncate if too long
             if len(result) > max_length:
-                result = result[:max_length] + '\n\n... (diff truncated)'
+                result = result[:max_length] + '\n\n... (gekürzt)'
 
-            return result if result else 'No visible text changes (possibly whitespace/formatting only)'
+            return result if result else '(keine Unterschiede nach Bereinigung)'
         except Exception as e:
             logger.error(f'Failed to generate diff: {e}')
-            return 'Diff generation failed'
+            return f'Diff-Fehler: {str(e)}'
+
+    def _light_clean_for_diff(self, html: str) -> str:
+        """Light cleaning for diff display - keeps more content visible."""
+        import re
+
+        if not html:
+            return ""
+
+        # Extract body only
+        body_match = re.search(r'<body[^>]*>(.*?)</body>', html, re.DOTALL | re.IGNORECASE)
+        if body_match:
+            html = body_match.group(1)
+
+        # Remove script tags
+        html = re.sub(r'<script[^>]*>.*?</script>', '', html, flags=re.DOTALL | re.IGNORECASE)
+
+        # Remove style tags
+        html = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL | re.IGNORECASE)
+
+        # Remove HTML comments
+        html = re.sub(r'<!--.*?-->', '', html, flags=re.DOTALL)
+
+        # Normalize whitespace a bit (but keep structure)
+        html = re.sub(r'\n\s*\n', '\n', html)
+
+        return html.strip()
 
     def extract_form_fields(self, html: str) -> List[Dict[str, Any]]:
         """Extract form fields from HTML."""

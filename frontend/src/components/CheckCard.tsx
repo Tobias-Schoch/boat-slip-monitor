@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { Clock, Zap, ChevronRight } from 'lucide-react'
 import type { Check } from '@/lib/useApi'
 
 type CheckStatus = 'SUCCESS' | 'FAILED' | 'TIMEOUT'
@@ -16,6 +17,7 @@ function formatTime(dateStr: string | undefined): string {
     const date = new Date(dateStr)
     if (isNaN(date.getTime())) return '--:--:--'
     return date.toLocaleTimeString('de-DE', {
+      timeZone: 'Europe/Berlin',
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
@@ -110,25 +112,11 @@ export function CheckCard({ check, index = 0 }: CheckCardProps) {
 
           <div className="flex items-center gap-3 mt-1 text-sm text-muted">
             <span className="flex items-center gap-1">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Clock className="w-3.5 h-3.5" />
               {formatTime(check.timestamp)}
             </span>
             <span className="flex items-center gap-1">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
+              <Zap className="w-3.5 h-3.5" />
               {check.duration_ms}ms
             </span>
             {check.status_code && (
@@ -147,9 +135,7 @@ export function CheckCard({ check, index = 0 }: CheckCardProps) {
           initial={{ x: -5 }}
           whileHover={{ x: 0 }}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <ChevronRight className="w-5 h-5" />
         </motion.div>
       </div>
     </motion.div>

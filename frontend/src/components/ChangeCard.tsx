@@ -58,6 +58,7 @@ function formatDate(dateStr: string | undefined): string {
     const date = new Date(dateStr)
     if (isNaN(date.getTime())) return 'Unbekannt'
     return date.toLocaleString('de-DE', {
+      timeZone: 'Europe/Berlin',
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -241,7 +242,7 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
           </div>
         </div>
 
-        {/* Diff View */}
+        {/* Diff View - GitHub Style */}
         <AnimatePresence>
           {showDiff && change.diff && (
             <motion.div
@@ -251,27 +252,52 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
               transition={{ duration: 0.3 }}
               className="mt-4 overflow-hidden"
             >
-              <div className="p-4 bg-black/30 rounded-xl border border-white/5 overflow-x-auto">
-                <div className="text-sm font-mono space-y-1">
-                  {change.diff.split('\n').map((line, i) => {
-                    const isAddition = line.startsWith('+ ')
-                    const isDeletion = line.startsWith('- ')
+              <div className="rounded-xl border border-white/10 overflow-hidden">
+                {/* Diff Header */}
+                <div className="px-4 py-2 bg-white/5 border-b border-white/10 text-xs text-muted font-medium">
+                  Änderungen
+                </div>
+                {/* Diff Content */}
+                <div className="overflow-x-auto">
+                  <div className="text-sm font-mono">
+                    {change.diff.split('\n').map((line, i) => {
+                      const isAddition = line.startsWith('+ ')
+                      const isDeletion = line.startsWith('- ')
+                      const lineContent = line.slice(2) || line
 
-                    return (
-                      <div
-                        key={i}
-                        className={`px-2 py-0.5 rounded ${
-                          isAddition
-                            ? 'bg-success/20 text-success border-l-2 border-success'
-                            : isDeletion
-                            ? 'bg-error/20 text-error border-l-2 border-error'
-                            : 'text-muted'
-                        }`}
-                      >
-                        <span className="whitespace-pre-wrap break-all">{line}</span>
-                      </div>
-                    )
-                  })}
+                      if (!line.trim()) return null
+
+                      return (
+                        <div
+                          key={i}
+                          className={`flex ${
+                            isAddition
+                              ? 'bg-green-500/30 border-l-4 border-green-500'
+                              : isDeletion
+                              ? 'bg-red-500/30 border-l-4 border-red-500'
+                              : 'bg-white/5'
+                          }`}
+                        >
+                          {/* Line indicator */}
+                          <div className={`w-8 flex-shrink-0 text-center py-1.5 text-xs font-bold select-none ${
+                            isAddition ? 'text-green-400 bg-green-500/20'
+                            : isDeletion ? 'text-red-400 bg-red-500/20'
+                            : 'text-muted bg-white/5'
+                          }`}>
+                            {isAddition ? '+' : isDeletion ? '−' : ' '}
+                          </div>
+                          {/* Line content */}
+                          <div className={`flex-1 px-3 py-1.5 ${
+                            isAddition ? 'text-green-200'
+                            : isDeletion ? 'text-red-200'
+                            : 'text-foreground'
+                          }`}>
+                            <span className="whitespace-pre-wrap break-all">{lineContent}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
             </motion.div>

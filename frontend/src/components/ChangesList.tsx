@@ -120,7 +120,7 @@ export function ChangesList() {
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               />
-              <p className="text-muted">Loading changes...</p>
+              <p className="text-muted">Änderungen werden geladen...</p>
             </div>
           </motion.div>
         ) : changes.length === 0 ? (
@@ -132,17 +132,17 @@ export function ChangesList() {
             className="glass-ultra rounded-2xl p-16 text-center"
           >
             <motion.div
-              className="text-6xl mb-6"
+              className="mb-6 flex justify-center"
               animate={{ y: [-5, 5, -5] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             >
-              🔍
+              <Search className="w-16 h-16 text-muted" />
             </motion.div>
-            <h3 className="text-xl font-bold text-foreground mb-2">No changes found</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">Keine Änderungen gefunden</h3>
             <p className="text-muted">
               {filter !== 'all'
-                ? `No ${filter} changes detected yet`
-                : 'No changes have been detected yet'}
+                ? `Keine ${filter === 'CRITICAL' ? 'kritischen' : filter === 'IMPORTANT' ? 'wichtigen' : 'Info'}-Änderungen`
+                : 'Noch keine Änderungen erkannt'}
             </p>
           </motion.div>
         ) : (
@@ -173,15 +173,11 @@ export function ChangesList() {
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
-                      <motion.div
-                        className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                      />
-                      Loading...
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Laden...
                     </span>
                   ) : (
-                    'Load More'
+                    'Mehr laden'
                   )}
                 </motion.button>
               </motion.div>

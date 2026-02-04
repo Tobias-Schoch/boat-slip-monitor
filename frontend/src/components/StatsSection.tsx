@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { motion, useInView } from 'framer-motion'
+import { BarChart3, Bell, AlertCircle, Globe } from 'lucide-react'
 
 interface AnimatedNumberProps {
   value: number
@@ -40,7 +41,7 @@ function AnimatedNumber({ value, duration = 2 }: AnimatedNumberProps) {
 type StatColor = 'primary' | 'success' | 'warning' | 'error'
 
 interface StatCardProps {
-  icon: string
+  icon: ReactNode
   label: string
   value: number
   suffix?: string
@@ -105,9 +106,9 @@ function StatCard({ icon, label, value, suffix = '', color, delay = 0 }: StatCar
       </div>
 
       {/* Icon with glow */}
-      <div className="text-4xl mb-4 relative">
+      <div className={`mb-4 relative ${colors.text}`}>
         <span className="relative z-10">{icon}</span>
-        <div className={`absolute inset-0 blur-xl ${colors.text} opacity-30`}>
+        <div className={`absolute inset-0 blur-xl opacity-30`}>
           {icon}
         </div>
       </div>
@@ -152,29 +153,29 @@ export function StatsSection({
       className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
     >
       <StatCard
-        icon="📊"
-        label="Total Checks"
+        icon={<BarChart3 className="w-10 h-10" />}
+        label="Checks gesamt"
         value={totalChecks}
         color="primary"
         delay={0}
       />
       <StatCard
-        icon="🔔"
-        label="Changes Detected"
+        icon={<Bell className="w-10 h-10" />}
+        label="Änderungen"
         value={changesDetected}
         color="warning"
         delay={0.1}
       />
       <StatCard
-        icon="🚨"
-        label="Critical Alerts"
+        icon={<AlertCircle className="w-10 h-10" />}
+        label="Kritische Alerts"
         value={criticalChanges}
         color="error"
         delay={0.2}
       />
       <StatCard
-        icon="🌐"
-        label="URLs Monitored"
+        icon={<Globe className="w-10 h-10" />}
+        label="URLs überwacht"
         value={urlsMonitored}
         color="success"
         delay={0.3}
