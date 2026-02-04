@@ -1,0 +1,29 @@
+# Web Framework
+fastapi==0.115.0
+uvicorn[standard]==0.31.0
+python-multipart==0.0.12
+
+# Database
+sqlalchemy==2.0.35
+alembic==1.14.0
+aiosqlite==0.20.0
+
+# Scraping
+playwright==1.48.0
+
+# Scheduling
+apscheduler==3.10.4
+
+# Notifications
+python-telegram-bot==21.6
+aiosmtplib==3.0.2
+
+# Utilities
+pydantic==2.9.2
+pydantic-settings==2.5.2
+python-dotenv==1.0.1
+aiofiles==24.1.0
+pillow==10.4.0
+
+# Diff generation
+diff-match-patch==20230430

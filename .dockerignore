@@ -1,48 +1,62 @@
-# Dependencies
-node_modules
-.pnp
-.pnp.js
-
-# Build outputs
-dist
-build
-.next
-out
-
-# Testing
-coverage
-
-# Environment
-.env
-.env*.local
-
-# Logs
-logs
-*.log
-
-# OS
-.DS_Store
-
-# IDEs
-.vscode
-.idea
-*.swp
-*.swo
-*~
-
 # Git
 .git
 .gitignore
 
-# Data
-data
-screenshots
-*.db
-*.sqlite
+# Environment
+.env
+.env.*
+!.env.example
 
-# Turbo
-.turbo
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Documentation
-README.md
 *.md
+!README.md
+docs/
+
+# Testing
+.pytest_cache/
+coverage/
+*.cover
+.coverage
+
+# Data
+data/
+screenshots/
+logs/
+
+# Old packages (from v1)
+packages/
+scripts/
+turbo.json
+Dockerfile.monitor
+Dockerfile.web

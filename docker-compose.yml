@@ -1,101 +1,20 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: boat-monitor-postgres
-    environment:
-      POSTGRES_USER: boat_monitor
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      POSTGRES_DB: boat_monitor
+  boat-monitor:
+    build: .
+    image: boat-slip-monitor:latest
+    container_name: boat-monitor
     ports:
-      - "5432:5432"
+      - "3000:8000"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - boat-monitor-data:/data
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U boat_monitor"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    container_name: boat-monitor-redis
-    command: redis-server --appendonly yes
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  monitor:
-    build:
-      context: .
-      dockerfile: Dockerfile.monitor
-    container_name: boat-monitor-service
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://boat_monitor:${POSTGRES_PASSWORD:-changeme}@postgres:5432/boat_monitor
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_SECURE: ${SMTP_SECURE:-false}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_FROM: ${SMTP_FROM}
-      SMTP_TO: ${SMTP_TO}
-      CHECK_INTERVAL_MINUTES: ${CHECK_INTERVAL_MINUTES:-5}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      SCREENSHOT_DIR: /app/data/screenshots
-    volumes:
-      - screenshots_data:/app/data/screenshots
-      - logs_data:/app/logs
-    restart: unless-stopped
-
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-    container_name: boat-monitor-web
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://boat_monitor:${POSTGRES_PASSWORD:-changeme}@postgres:5432/boat_monitor
-      SCREENSHOT_DIR: /app/data/screenshots
-      NEXT_PUBLIC_API_URL: http://localhost:3000
-    ports:
-      - "3000:3000"
-    volumes:
-      - screenshots_data:/app/data/screenshots:ro
-      - web_logs:/app/logs
-    restart: unless-stopped
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
-  postgres_data:
+  boat-monitor-data:
     driver: local
-  redis_data:
-    driver: local
-  screenshots_data:
-    driver: local
-  logs_data:
-    driver: local
-  web_logs:
-    driver: local
-
-networks:
-  default:
-    name: boat-monitor-network
