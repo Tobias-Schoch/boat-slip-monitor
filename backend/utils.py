@@ -4,6 +4,68 @@ import hashlib
 from typing import Tuple
 
 
+def clean_html_for_diff(html: str) -> str:
+    """
+    Clean HTML for diff comparison by removing noise elements.
+
+    Removes:
+    - <head> section entirely
+    - <style> tags and content
+    - <link> tags
+    - <script> tags and content
+    - CCM19 cookie consent manager elements
+    - HTML comments
+    - Excessive whitespace
+    """
+    if not html:
+        return ""
+
+    # Remove entire <head> section
+    html = re.sub(r'<head[^>]*>.*?</head>', '', html, flags=re.DOTALL | re.IGNORECASE)
+
+    # Remove script tags and their content
+    html = re.sub(r'<script[^>]*>.*?</script>', '', html, flags=re.DOTALL | re.IGNORECASE)
+
+    # Remove style tags and their content
+    html = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL | re.IGNORECASE)
+
+    # Remove link tags (self-closing)
+    html = re.sub(r'<link[^>]*/?>', '', html, flags=re.IGNORECASE)
+
+    # Remove noscript tags and their content
+    html = re.sub(r'<noscript[^>]*>.*?</noscript>', '', html, flags=re.DOTALL | re.IGNORECASE)
+
+    # Remove CCM19 cookie consent elements
+    # Remove elements with ccm19 in class or id
+    html = re.sub(r'<[^>]*\s(class|id)=["\'][^"\']*ccm[^"\']*["\'][^>]*>.*?</[^>]+>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    # Remove standalone ccm divs (self-closing or empty)
+    html = re.sub(r'<div[^>]*\s(class|id)=["\'][^"\']*ccm[^"\']*["\'][^>]*/?\s*>', '', html, flags=re.IGNORECASE)
+    # Remove data-ccm attributes
+    html = re.sub(r'\s+data-ccm[a-z0-9-]*="[^"]*"', '', html, flags=re.IGNORECASE)
+    # Remove ccm script/config blocks
+    html = re.sub(r'CCM19\s*[=:]\s*\{[^}]*\}', '', html, flags=re.DOTALL | re.IGNORECASE)
+    html = re.sub(r'window\.CCM19[^;]*;', '', html, flags=re.IGNORECASE)
+    # Remove ccm iframes
+    html = re.sub(r'<iframe[^>]*ccm[^>]*>.*?</iframe>', '', html, flags=re.DOTALL | re.IGNORECASE)
+
+    # Remove HTML comments
+    html = re.sub(r'<!--.*?-->', '', html, flags=re.DOTALL)
+
+    # Remove meta tags
+    html = re.sub(r'<meta[^>]*/?>', '', html, flags=re.IGNORECASE)
+
+    # Remove data-* attributes (often dynamic)
+    html = re.sub(r'\s+data-[a-z0-9-]+="[^"]*"', '', html, flags=re.IGNORECASE)
+
+    # Normalize whitespace (collapse multiple spaces/newlines)
+    html = re.sub(r'\s+', ' ', html)
+
+    # Trim
+    html = html.strip()
+
+    return html
+
+
 def normalize_html(html: str) -> str:
     """
     Normalize HTML to reduce false positives in change detection.

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from diff_match_patch import diff_match_patch
 
 from backend.database import ChangeType, Priority
+from backend.utils import clean_html_for_diff
 
 
 logger = logging.getLogger(__name__)
@@ -295,8 +296,12 @@ class ChangeDetector:
     def generate_diff(self, old_content: str, new_content: str, max_length: int = 5000) -> str:
         """Generate human-readable diff between old and new content."""
         try:
+            # Clean HTML to remove noise (head, style, script, link, ccm19, etc.)
+            old_cleaned = clean_html_for_diff(old_content)
+            new_cleaned = clean_html_for_diff(new_content)
+
             # Use diff_match_patch for diff generation
-            diffs = self.dmp.diff_main(old_content, new_content)
+            diffs = self.dmp.diff_main(old_cleaned, new_cleaned)
             self.dmp.diff_cleanupSemantic(diffs)
 
             # Build human-readable diff
