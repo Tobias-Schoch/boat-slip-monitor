@@ -81,29 +81,16 @@ def normalize_html(html: str) -> str:
     """
     Normalize HTML to reduce false positives in change detection.
 
-    Removes:
-    - Script and style tags
-    - HTML comments
-    - Dynamic timestamps and dates
-    - UUIDs and session IDs
-    - Excessive whitespace
+    Uses the same aggressive cleaning as clean_html_for_diff, plus
+    additional normalization for timestamps/UUIDs.
     """
     if not html:
         return ""
 
-    # Extract body content only (if present)
-    body_match = re.search(r'<body[^>]*>(.*?)</body>', html, re.DOTALL | re.IGNORECASE)
-    if body_match:
-        html = body_match.group(1)
+    # First, apply aggressive cleaning to remove noise
+    html = clean_html_for_diff(html)
 
-    # Remove script tags and their content
-    html = re.sub(r'<script[^>]*>.*?</script>', '', html, flags=re.DOTALL | re.IGNORECASE)
-
-    # Remove style tags and their content
-    html = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL | re.IGNORECASE)
-
-    # Remove HTML comments
-    html = re.sub(r'<!--.*?-->', '', html, flags=re.DOTALL)
+    # Then normalize dynamic content that might still be present
 
     # Remove common timestamp patterns
     # ISO 8601: 2024-01-15T12:34:56Z
@@ -126,13 +113,8 @@ def normalize_html(html: str) -> str:
     # Remove session IDs and tokens (common patterns)
     html = re.sub(r'\b[A-Za-z0-9]{32,}\b', 'TOKEN', html)
 
-    # Remove data-* attributes (often dynamic)
-    html = re.sub(r'\s+data-[a-z0-9-]+="[^"]*"', '', html, flags=re.IGNORECASE)
-
-    # Normalize whitespace (collapse multiple spaces/newlines)
+    # Normalize whitespace again after replacements
     html = re.sub(r'\s+', ' ', html)
-
-    # Trim
     html = html.strip()
 
     return html
