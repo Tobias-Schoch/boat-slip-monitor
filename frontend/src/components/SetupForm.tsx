@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// Use relative URLs when running from the same server (Docker container)
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface SetupFormProps {
   onComplete?: () => void

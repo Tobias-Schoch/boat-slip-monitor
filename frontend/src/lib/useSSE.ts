@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Check, Change } from './useApi'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// Use relative URLs when running from the same server (Docker container)
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
 export function useSSE() {
   const [checks, setChecks] = useState<Check[]>([])

@@ -7,7 +7,8 @@ import { SetupForm } from '@/components/SetupForm'
 import { useSSE } from '@/lib/useSSE'
 import { useApi } from '@/lib/useApi'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// Use relative URLs when running from the same server (Docker container)
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'urls' | 'settings'>('dashboard')
