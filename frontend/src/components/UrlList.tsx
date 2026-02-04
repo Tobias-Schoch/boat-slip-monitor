@@ -2,10 +2,29 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Clock, Hash, Plus, Pencil, Trash2, Pause, Play, AlertTriangle, Link } from 'lucide-react'
 import type { MonitoredUrl, UrlCreateData, UrlUpdateData } from '@/lib/useApi'
 import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { Input } from './ui/Input'
+
+function formatDateTime(dateStr: string | undefined): string {
+  if (!dateStr) return 'Nie'
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return 'Nie'
+    return date.toLocaleString('de-DE', {
+      timeZone: 'Europe/Berlin',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return 'Nie'
+  }
+}
 
 interface UrlListProps {
   urls: MonitoredUrl[]
@@ -161,7 +180,7 @@ export function UrlList({
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
           />
-          <p className="text-muted">Loading URLs...</p>
+          <p className="text-muted">URLs werden geladen...</p>
         </div>
       </div>
     )
@@ -171,13 +190,9 @@ export function UrlList({
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">Monitored URLs</h2>
-        <Button onClick={openAddModal} icon={
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-        }>
-          Add URL
+        <h2 className="text-2xl font-bold text-foreground">Überwachte URLs</h2>
+        <Button onClick={openAddModal} icon={<Plus className="w-5 h-5" />}>
+          URL hinzufügen
         </Button>
       </div>
 
@@ -188,10 +203,10 @@ export function UrlList({
           animate={{ opacity: 1, y: 0 }}
           className="glass-ultra rounded-2xl p-12 text-center"
         >
-          <div className="text-6xl mb-4">🔗</div>
-          <h3 className="text-xl font-bold text-foreground mb-2">No URLs configured</h3>
-          <p className="text-muted mb-6">Add your first URL to start monitoring</p>
-          <Button onClick={openAddModal}>Add Your First URL</Button>
+          <Link className="w-16 h-16 text-muted mb-4 mx-auto" />
+          <h3 className="text-xl font-bold text-foreground mb-2">Keine URLs konfiguriert</h3>
+          <p className="text-muted mb-6">Füge deine erste URL hinzu, um mit der Überwachung zu beginnen</p>
+          <Button onClick={openAddModal}>Erste URL hinzufügen</Button>
         </motion.div>
       ) : (
         <div className="grid gap-4">
@@ -224,7 +239,7 @@ export function UrlList({
                         whileHover={{ scale: 1.05 }}
                       >
                         <span className={`w-2 h-2 rounded-full ${url.enabled ? 'bg-success' : 'bg-muted'}`} />
-                        {url.enabled ? 'Active' : 'Paused'}
+                        {url.enabled ? 'Aktiv' : 'Pausiert'}
                       </motion.div>
                     </div>
 
@@ -247,17 +262,13 @@ export function UrlList({
                     <div className="flex flex-wrap gap-4 text-xs text-muted">
                       {url.last_checked && (
                         <div className="flex items-center gap-1.5">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Last check: {new Date(url.last_checked).toLocaleString()}
+                          <Clock className="w-4 h-4" />
+                          Letzter Check: {formatDateTime(url.last_checked)}
                         </div>
                       )}
                       {url.last_hash && (
                         <div className="flex items-center gap-1.5 font-mono">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                          </svg>
+                          <Hash className="w-4 h-4" />
                           {url.last_hash.slice(0, 8)}...
                         </div>
                       )}
@@ -276,18 +287,9 @@ export function UrlList({
                           ? 'text-success hover:bg-success/10'
                           : 'text-muted hover:bg-white/10'
                       }`}
-                      title={url.enabled ? 'Pause monitoring' : 'Resume monitoring'}
+                      title={url.enabled ? 'Pausieren' : 'Fortsetzen'}
                     >
-                      {url.enabled ? (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      ) : (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      )}
+                      {url.enabled ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                     </motion.button>
 
                     <motion.button
@@ -295,11 +297,9 @@ export function UrlList({
                       whileTap={{ scale: 0.95 }}
                       onClick={() => openEditModal(url)}
                       className="p-2.5 rounded-xl text-primary hover:bg-primary/10 transition-colors"
-                      title="Edit URL"
+                      title="Bearbeiten"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
+                      <Pencil className="w-5 h-5" />
                     </motion.button>
 
                     <motion.button
@@ -307,11 +307,9 @@ export function UrlList({
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setDeletingUrl(url)}
                       className="p-2.5 rounded-xl text-error hover:bg-error/10 transition-colors"
-                      title="Delete URL"
+                      title="Löschen"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <Trash2 className="w-5 h-5" />
                     </motion.button>
                   </div>
                 </div>
@@ -329,7 +327,7 @@ export function UrlList({
           setEditingUrl(null)
           resetForm()
         }}
-        title={editingUrl ? 'Edit URL' : 'Add New URL'}
+        title={editingUrl ? 'URL bearbeiten' : 'Neue URL hinzufügen'}
         size="md"
       >
         <div className="space-y-5">
@@ -352,9 +350,9 @@ export function UrlList({
           />
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">Description</label>
+            <label className="block text-sm font-medium text-foreground">Beschreibung</label>
             <textarea
-              placeholder="Optional description..."
+              placeholder="Optionale Beschreibung..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={2}
@@ -364,8 +362,8 @@ export function UrlList({
 
           <div className="flex items-center justify-between py-2">
             <div>
-              <label className="text-sm font-medium text-foreground">Enable Monitoring</label>
-              <p className="text-xs text-muted">Start monitoring immediately after saving</p>
+              <label className="text-sm font-medium text-foreground">Überwachung aktivieren</label>
+              <p className="text-xs text-muted">Überwachung sofort nach Speichern starten</p>
             </div>
             <button
               type="button"
@@ -392,14 +390,14 @@ export function UrlList({
                 resetForm()
               }}
             >
-              Cancel
+              Abbrechen
             </Button>
             <Button
               className="flex-1"
               onClick={handleSubmit}
               loading={submitLoading}
             >
-              {editingUrl ? 'Save Changes' : 'Add URL'}
+              {editingUrl ? 'Speichern' : 'Hinzufügen'}
             </Button>
           </div>
         </div>
@@ -409,20 +407,18 @@ export function UrlList({
       <Modal
         isOpen={!!deletingUrl}
         onClose={() => setDeletingUrl(null)}
-        title="Delete URL"
+        title="URL löschen"
         size="sm"
       >
         <div className="space-y-4">
           <p className="text-foreground">
-            Are you sure you want to delete{' '}
-            <span className="font-bold text-error">{deletingUrl?.name}</span>?
+            Bist du sicher, dass du{' '}
+            <span className="font-bold text-error">{deletingUrl?.name}</span> löschen möchtest?
           </p>
           <div className="flex items-start gap-3 p-4 rounded-xl bg-warning/10 border border-warning/30">
-            <svg className="w-5 h-5 text-warning shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+            <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
             <p className="text-sm text-warning">
-              This will permanently delete all associated checks, screenshots, and change history.
+              Dies löscht permanent alle zugehörigen Checks, Screenshots und Änderungshistorie.
             </p>
           </div>
           <div className="flex gap-3 pt-2">
@@ -431,7 +427,7 @@ export function UrlList({
               className="flex-1"
               onClick={() => setDeletingUrl(null)}
             >
-              Cancel
+              Abbrechen
             </Button>
             <Button
               variant="danger"
@@ -439,7 +435,7 @@ export function UrlList({
               onClick={handleDelete}
               loading={actionLoading === deletingUrl?.id}
             >
-              Delete
+              Löschen
             </Button>
           </div>
         </div>

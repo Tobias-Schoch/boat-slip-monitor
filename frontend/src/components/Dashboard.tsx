@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Clock, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, Clock } from 'lucide-react'
 import type { Check, Change, MonitoredUrl } from '@/lib/useApi'
 import { CheckCard } from './CheckCard'
 import { ChangeCard } from './ChangeCard'
@@ -14,15 +14,6 @@ interface DashboardProps {
   checks: Check[]
   changes: Change[]
   urls?: MonitoredUrl[]
-}
-
-function getCronIntervalMinutes(): number {
-  const hour = new Date().getHours()
-  // Working hours (7-17): 5 min, Off hours (0-6, 18-23): 3 min
-  if (hour >= 7 && hour < 18) {
-    return 5
-  }
-  return 3
 }
 
 const filterButtons: { id: FilterType; label: string; activeClass: string }[] = [
@@ -53,19 +44,17 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
 
   const criticalCount = changes.filter((c) => c.priority === 'CRITICAL').length
 
-  // Filter checks to only show those from the last cron interval
-  const cronInterval = getCronIntervalMinutes()
-  const recentChecks = useMemo(() => {
-    const cutoff = new Date(Date.now() - cronInterval * 60 * 1000)
-    return checks.filter((check) => {
-      try {
-        const checkTime = new Date(check.timestamp)
-        return checkTime >= cutoff
-      } catch {
-        return false
+  // Get the last check for each URL
+  const lastCheckPerUrl = useMemo(() => {
+    const urlMap = new Map<string, typeof checks[0]>()
+    // checks are sorted newest first, so first occurrence is the latest
+    for (const check of checks) {
+      if (!urlMap.has(check.url_id)) {
+        urlMap.set(check.url_id, check)
       }
-    })
-  }, [checks, cronInterval])
+    }
+    return Array.from(urlMap.values())
+  }, [checks])
 
   return (
     <div className="space-y-10">
@@ -157,21 +146,21 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
         </AnimatePresence>
       </motion.section>
 
-      {/* Recent Checks */}
+      {/* Last Check per URL */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Letzte Checks</h2>
+          <h2 className="text-2xl font-bold text-foreground">Letzter Check pro URL</h2>
           <span className="text-sm text-muted px-3 py-1 rounded-lg bg-white/5">
-            Letzte {cronInterval} Min
+            {lastCheckPerUrl.length} URLs
           </span>
         </div>
 
         <AnimatePresence mode="wait">
-          {recentChecks.length === 0 ? (
+          {lastCheckPerUrl.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -186,9 +175,9 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
               >
                 <Clock className="w-16 h-16 text-muted" />
               </motion.div>
-              <h3 className="text-xl font-bold text-foreground mb-2">Keine Checks in den letzten {cronInterval} Minuten</h3>
+              <h3 className="text-xl font-bold text-foreground mb-2">Noch keine Checks vorhanden</h3>
               <p className="text-muted">
-                Warte auf den nächsten Check-Zyklus...
+                Warte auf den ersten Check-Zyklus...
               </p>
             </motion.div>
           ) : (
@@ -199,7 +188,7 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
               exit={{ opacity: 0 }}
               className="space-y-3"
             >
-              {recentChecks.map((check, index) => (
+              {lastCheckPerUrl.map((check, index) => (
                 <CheckCard key={check.id} check={check} index={index} />
               ))}
             </motion.div>

@@ -4,7 +4,7 @@ import json
 import logging
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 
@@ -12,7 +12,7 @@ from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -90,7 +90,25 @@ app.add_middleware(
 
 
 # Pydantic models for API responses
-class UrlResponse(BaseModel):
+class BaseResponse(BaseModel):
+    """Base response model with UTC datetime serialization."""
+
+    class Config:
+        from_attributes = True
+
+    @field_serializer('*', mode='wrap')
+    def serialize_datetime(self, value, handler, info):
+        """Serialize datetime fields as ISO format with 'Z' suffix for UTC."""
+        if isinstance(value, datetime):
+            # Treat naive datetimes as UTC and add 'Z' suffix
+            if value.tzinfo is None:
+                return value.strftime('%Y-%m-%dT%H:%M:%SZ')
+            else:
+                return value.isoformat()
+        return handler(value)
+
+
+class UrlResponse(BaseResponse):
     """Response model for monitored URL."""
     id: str
     url: str
@@ -101,11 +119,8 @@ class UrlResponse(BaseModel):
     last_checked: Optional[datetime]
     last_hash: Optional[str]
 
-    class Config:
-        from_attributes = True
 
-
-class CheckResponse(BaseModel):
+class CheckResponse(BaseResponse):
     """Response model for check."""
     id: str
     url_id: str
@@ -116,11 +131,8 @@ class CheckResponse(BaseModel):
     error: Optional[str]
     url_name: Optional[str] = None
 
-    class Config:
-        from_attributes = True
 
-
-class ChangeResponse(BaseModel):
+class ChangeResponse(BaseResponse):
     """Response model for change."""
     id: str
     check_id: str
@@ -133,9 +145,6 @@ class ChangeResponse(BaseModel):
     created_at: datetime
     url_name: Optional[str] = None
     url: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 
 # Pydantic models for Settings API
