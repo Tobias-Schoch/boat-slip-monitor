@@ -26,12 +26,35 @@
     @apply shadow-2xl shadow-black/20;
   }
 
+  /* Ultra glass effect with noise texture */
+  .glass-ultra {
+    @apply relative overflow-hidden;
+    @apply bg-gradient-to-br from-white/[0.08] to-white/[0.02];
+    @apply backdrop-blur-2xl backdrop-saturate-200;
+    @apply border border-white/[0.08];
+    @apply shadow-[0_8px_32px_rgba(0,0,0,0.4)];
+  }
+
+  .glass-ultra::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none opacity-[0.03];
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+
   /* Gradient text */
   .gradient-text {
     @apply bg-gradient-to-r from-primary via-accent to-primary;
     @apply bg-clip-text text-transparent;
     background-size: 200% auto;
     animation: gradient-shift 8s ease infinite;
+  }
+
+  /* Neon glow text */
+  .text-glow {
+    text-shadow:
+      0 0 10px currentColor,
+      0 0 20px currentColor,
+      0 0 40px currentColor;
   }
 
   /* Glowing button */
@@ -72,6 +95,69 @@
   .animated-border:hover::before {
     @apply opacity-100;
     animation: gradient-shift 3s ease infinite;
+  }
+
+  /* Multi-layer glow */
+  .glow-intense {
+    box-shadow:
+      0 0 20px rgba(59, 130, 246, 0.4),
+      0 0 40px rgba(59, 130, 246, 0.3),
+      0 0 60px rgba(59, 130, 246, 0.2);
+  }
+
+  /* 3D Card with tilt */
+  .card-3d {
+    @apply transition-all duration-500;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+
+  .card-3d:hover {
+    transform: rotateX(2deg) rotateY(-2deg) translateZ(10px);
+  }
+
+  /* Hover lift effect */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-8px) scale(1.02);
+    @apply shadow-2xl;
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* Background effects */
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .bg-mesh {
+    background-image:
+      radial-gradient(at 0% 0%, hsla(217, 91%, 60%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(280, 91%, 60%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(330, 91%, 60%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(142, 76%, 45%, 0.1) 0px, transparent 50%);
   }
 }
 

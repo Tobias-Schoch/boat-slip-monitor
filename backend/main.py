@@ -265,6 +265,15 @@ async def get_url(url_id: str, db: AsyncSession = Depends(get_db)):
     return url
 
 
+class UrlCreateRequest(BaseModel):
+    """Request model for creating URL."""
+    url: str
+    name: str
+    description: Optional[str] = None
+    enabled: bool = True
+    check_interval_minutes: int = 5
+
+
 class UrlUpdateRequest(BaseModel):
     """Request model for updating URL."""
     name: Optional[str] = None
@@ -272,6 +281,69 @@ class UrlUpdateRequest(BaseModel):
     description: Optional[str] = None
     enabled: Optional[bool] = None
     check_interval_minutes: Optional[int] = None
+
+
+@app.post("/api/urls", response_model=UrlResponse, status_code=201)
+async def create_url(
+    url_data: UrlCreateRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Create a new monitored URL."""
+    from urllib.parse import urlparse
+
+    # Validate URL format
+    url_str = url_data.url.strip()
+    parsed = urlparse(url_str)
+    if not parsed.scheme or not parsed.netloc:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid URL format. Must include scheme (http/https) and domain."
+        )
+    if parsed.scheme not in ('http', 'https'):
+        raise HTTPException(
+            status_code=400,
+            detail="URL must use http or https protocol."
+        )
+
+    # Check for duplicate URL
+    result = await db.execute(
+        select(MonitoredUrl).where(MonitoredUrl.url == url_str)
+    )
+    existing = result.scalar_one_or_none()
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail=f"URL already exists with name: {existing.name}"
+        )
+
+    # Validate name
+    name = url_data.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    if len(name) > 255:
+        raise HTTPException(status_code=400, detail="Name must be 255 characters or less")
+
+    # Validate check_interval_minutes
+    if url_data.check_interval_minutes < 1:
+        raise HTTPException(status_code=400, detail="Check interval must be at least 1 minute")
+    if url_data.check_interval_minutes > 1440:
+        raise HTTPException(status_code=400, detail="Check interval must be 1440 minutes (24 hours) or less")
+
+    # Create new URL
+    new_url = MonitoredUrl(
+        url=url_str,
+        name=name,
+        description=url_data.description,
+        enabled=url_data.enabled,
+        check_interval_minutes=url_data.check_interval_minutes
+    )
+
+    db.add(new_url)
+    await db.commit()
+    await db.refresh(new_url)
+
+    logger.info(f"Created new monitored URL: {new_url.name} ({new_url.id})")
+    return new_url
 
 
 @app.put("/api/urls/{url_id}", response_model=UrlResponse)
@@ -323,6 +395,31 @@ async def toggle_url(url_id: str, db: AsyncSession = Depends(get_db)):
         "success": True,
         "enabled": url.enabled,
         "message": f"URL {'enabled' if url.enabled else 'disabled'}"
+    }
+
+
+@app.delete("/api/urls/{url_id}")
+async def delete_url(url_id: str, db: AsyncSession = Depends(get_db)):
+    """Delete a monitored URL and all associated data."""
+    result = await db.execute(
+        select(MonitoredUrl).where(MonitoredUrl.id == url_id)
+    )
+    url = result.scalar_one_or_none()
+    if not url:
+        raise HTTPException(status_code=404, detail="URL not found")
+
+    url_name = url.name
+
+    # Delete the URL (cascade will handle related checks, changes, screenshots, notifications)
+    await db.delete(url)
+    await db.commit()
+
+    logger.info(f"Deleted monitored URL: {url_name} ({url_id})")
+
+    return {
+        "success": True,
+        "message": f"URL '{url_name}' deleted successfully",
+        "deleted_id": url_id
     }
 
 

@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
-// Use relative URLs when running from the same server (Docker container)
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
 export interface MonitoredUrl {
@@ -12,6 +11,22 @@ export interface MonitoredUrl {
   check_interval_minutes: number
   last_checked?: string
   last_hash?: string
+}
+
+export interface UrlCreateData {
+  url: string
+  name: string
+  description?: string
+  enabled?: boolean
+  check_interval_minutes?: number
+}
+
+export interface UrlUpdateData {
+  url?: string
+  name?: string
+  description?: string
+  enabled?: boolean
+  check_interval_minutes?: number
 }
 
 export interface Check {
@@ -44,11 +59,7 @@ export function useApi() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchUrls()
-  }, [])
-
-  const fetchUrls = async () => {
+  const fetchUrls = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`${API_BASE}/api/urls`)
@@ -61,7 +72,11 @@ export function useApi() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchUrls()
+  }, [fetchUrls])
 
   const fetchChecks = async (urlId?: string, limit = 50): Promise<Check[]> => {
     try {
@@ -98,6 +113,67 @@ export function useApi() {
     }
   }
 
+  const createUrl = async (data: UrlCreateData): Promise<MonitoredUrl> => {
+    const response = await fetch(`${API_BASE}/api/urls`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || 'Failed to create URL')
+    }
+
+    const newUrl = await response.json()
+    setUrls(prev => [...prev, newUrl].sort((a, b) => a.name.localeCompare(b.name)))
+    return newUrl
+  }
+
+  const updateUrl = async (id: string, data: UrlUpdateData): Promise<MonitoredUrl> => {
+    const response = await fetch(`${API_BASE}/api/urls/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || 'Failed to update URL')
+    }
+
+    const updatedUrl = await response.json()
+    setUrls(prev => prev.map(u => (u.id === id ? updatedUrl : u)))
+    return updatedUrl
+  }
+
+  const deleteUrl = async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/api/urls/${id}`, {
+      method: 'DELETE',
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || 'Failed to delete URL')
+    }
+
+    setUrls(prev => prev.filter(u => u.id !== id))
+  }
+
+  const toggleUrl = async (id: string): Promise<{ enabled: boolean }> => {
+    const response = await fetch(`${API_BASE}/api/urls/${id}/toggle`, {
+      method: 'PATCH',
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to toggle URL')
+    }
+
+    const result = await response.json()
+    setUrls(prev => prev.map(u => (u.id === id ? { ...u, enabled: result.enabled } : u)))
+    return result
+  }
+
   return {
     urls,
     loading,
@@ -105,5 +181,9 @@ export function useApi() {
     fetchUrls,
     fetchChecks,
     fetchChanges,
+    createUrl,
+    updateUrl,
+    deleteUrl,
+    toggleUrl,
   }
 }

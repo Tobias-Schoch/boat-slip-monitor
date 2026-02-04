@@ -1,69 +1,142 @@
+'use client'
+
+import { motion } from 'framer-motion'
 import type { Check } from '@/lib/useApi'
+
+type CheckStatus = 'SUCCESS' | 'FAILED' | 'TIMEOUT'
 
 interface CheckCardProps {
   check: Check
+  index?: number
 }
 
-export function CheckCard({ check }: CheckCardProps) {
-  const statusColors = {
-    SUCCESS: 'bg-success',
-    FAILED: 'bg-error',
-    TIMEOUT: 'bg-warning',
-  }
+const statusConfig: Record<CheckStatus, {
+  bg: string
+  border: string
+  dot: string
+  text: string
+  shadow: string
+}> = {
+  SUCCESS: {
+    bg: 'from-success/20 to-success/5',
+    border: 'border-success/30',
+    dot: 'bg-success',
+    text: 'text-success',
+    shadow: 'shadow-success/20',
+  },
+  FAILED: {
+    bg: 'from-error/20 to-error/5',
+    border: 'border-error/30',
+    dot: 'bg-error',
+    text: 'text-error',
+    shadow: 'shadow-error/20',
+  },
+  TIMEOUT: {
+    bg: 'from-warning/20 to-warning/5',
+    border: 'border-warning/30',
+    dot: 'bg-warning',
+    text: 'text-warning',
+    shadow: 'shadow-warning/20',
+  },
+}
 
-  const statusColor = statusColors[check.status] || 'bg-muted'
+export function CheckCard({ check, index = 0 }: CheckCardProps) {
+  const config = statusConfig[check.status] || statusConfig.SUCCESS
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-all">
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-3 flex-1">
-          {/* Status Indicator */}
-          <div className={`w-2 h-2 rounded-full mt-2 ${statusColor} animate-pulse`} />
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ scale: 1.01, x: 4 }}
+      className={`
+        relative overflow-hidden rounded-xl p-4
+        bg-gradient-to-r ${config.bg}
+        border ${config.border}
+        shadow-lg ${config.shadow}
+        hover:shadow-xl
+        transition-shadow duration-300
+        group
+      `}
+    >
+      {/* Progress bar indicator */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20 overflow-hidden">
+        <motion.div
+          className={`h-full ${config.dot}`}
+          initial={{ width: '0%' }}
+          animate={{ width: '100%' }}
+          transition={{ duration: 0.8, delay: index * 0.05 + 0.2 }}
+        />
+      </div>
 
-          {/* Check Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-medium text-foreground truncate">
-                {check.url_name || 'Unknown URL'}
-              </h3>
-              <span
-                className={`px-2 py-0.5 rounded text-xs font-medium ${
-                  check.status === 'SUCCESS'
-                    ? 'bg-success/20 text-success'
-                    : check.status === 'FAILED'
-                    ? 'bg-error/20 text-error'
-                    : 'bg-warning/20 text-warning'
-                }`}
-              >
-                {check.status}
-              </span>
-            </div>
+      <div className="flex items-center gap-4">
+        {/* Animated status dot */}
+        <div className="relative">
+          <span className="flex h-3 w-3 relative">
+            <span
+              className={`animate-ping absolute inline-flex h-full w-full rounded-full ${config.dot} opacity-75`}
+            />
+            <span className={`relative inline-flex rounded-full h-3 w-3 ${config.dot}`} />
+          </span>
+        </div>
 
-            <div className="flex items-center gap-3 text-sm text-muted">
-              <span>
-                {new Date(check.timestamp).toLocaleString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </span>
-              <span>•</span>
-              <span>{check.duration_ms}ms</span>
-              {check.status_code && (
-                <>
-                  <span>•</span>
-                  <span>HTTP {check.status_code}</span>
-                </>
-              )}
-            </div>
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3">
+            <h3 className="font-semibold text-foreground truncate">
+              {check.url_name || 'Unknown URL'}
+            </h3>
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${config.text} bg-current/10`}
+            >
+              {check.status}
+            </span>
+          </div>
 
-            {check.error && (
-              <p className="text-sm text-error mt-2 font-mono">{check.error}</p>
+          <div className="flex items-center gap-3 mt-1 text-sm text-muted">
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              {new Date(check.timestamp).toLocaleTimeString()}
+            </span>
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+              {check.duration_ms}ms
+            </span>
+            {check.status_code && (
+              <span className="font-mono text-xs">HTTP {check.status_code}</span>
             )}
           </div>
+
+          {check.error && (
+            <p className="text-sm text-error mt-2 font-mono truncate">{check.error}</p>
+          )}
         </div>
+
+        {/* Arrow indicator */}
+        <motion.div
+          className="text-muted opacity-0 group-hover:opacity-100 transition-opacity"
+          initial={{ x: -5 }}
+          whileHover={{ x: 0 }}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   )
 }

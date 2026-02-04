@@ -51,6 +51,14 @@ const config: Config = {
         'float': 'float 3s ease-in-out infinite',
         'gradient-shift': 'gradientShift 8s ease infinite',
         'spin-slow': 'spin 3s linear infinite',
+        // Premium animations
+        'morph': 'morph 8s ease-in-out infinite',
+        'shimmer': 'shimmer 2s linear infinite',
+        'glow-pulse': 'glowPulse 2s ease-in-out infinite',
+        'aurora': 'aurora 15s ease infinite',
+        'drift': 'drift 6s ease-in-out infinite',
+        'border-flow': 'borderFlow 4s linear infinite',
+        'blob': 'blob 7s infinite',
       },
       keyframes: {
         fadeIn: {
@@ -88,6 +96,43 @@ const config: Config = {
         gradientShift: {
           '0%, 100%': { backgroundPosition: '0% 50%' },
           '50%': { backgroundPosition: '100% 50%' },
+        },
+        // Premium keyframes
+        morph: {
+          '0%, 100%': { borderRadius: '60% 40% 30% 70%/60% 30% 70% 40%' },
+          '50%': { borderRadius: '30% 60% 70% 40%/50% 60% 30% 60%' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        glowPulse: {
+          '0%, 100%': {
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)'
+          },
+          '50%': {
+            boxShadow: '0 0 40px rgba(59, 130, 246, 0.8), 0 0 80px rgba(59, 130, 246, 0.5)'
+          },
+        },
+        aurora: {
+          '0%, 100%': { backgroundPosition: '50% 50%, 50% 50%' },
+          '50%': { backgroundPosition: '350% 50%, 350% 50%' },
+        },
+        drift: {
+          '0%, 100%': { transform: 'translateX(0) translateY(0)' },
+          '25%': { transform: 'translateX(10px) translateY(-5px)' },
+          '50%': { transform: 'translateX(-5px) translateY(-10px)' },
+          '75%': { transform: 'translateX(-10px) translateY(5px)' },
+        },
+        borderFlow: {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
+        blob: {
+          '0%': { transform: 'translate(0px, 0px) scale(1)' },
+          '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+          '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+          '100%': { transform: 'translate(0px, 0px) scale(1)' },
         },
       },
       backgroundImage: {
