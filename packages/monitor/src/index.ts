@@ -2,7 +2,7 @@
 import './env-loader';
 
 import { createModuleLogger } from '@boat-monitor/shared';
-import { checkDatabaseConnection, closeDatabaseConnection } from '@boat-monitor/database';
+import { checkDatabaseConnection, closeDatabaseConnection, runMigrations } from '@boat-monitor/database';
 import { checkQueueHealth, closeQueues } from './scheduler/queue';
 import { playwrightManager } from './scraper/playwright-manager';
 import { scheduleCronJobs } from './scheduler/cron';
@@ -13,6 +13,11 @@ const logger = createModuleLogger('Monitor');
 
 async function startMonitor() {
   try {
+    // Run database migrations
+    logger.info('Running database migrations...');
+    await runMigrations();
+    logger.info('Database migrations completed');
+
     // Check database connection
     const dbHealthy = await checkDatabaseConnection();
     if (!dbHealthy) {
