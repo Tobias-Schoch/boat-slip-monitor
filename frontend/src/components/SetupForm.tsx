@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-export function SetupForm() {
-  const router = useRouter()
+interface SetupFormProps {
+  onComplete?: () => void
+}
+
+export function SetupForm({ onComplete }: SetupFormProps) {
   const [activeSection, setActiveSection] = useState<'telegram' | 'email' | 'advanced'>(
     'telegram'
   )
@@ -66,8 +68,10 @@ export function SetupForm() {
       const result = await response.json()
 
       if (result.success) {
-        // Redirect to dashboard
-        router.push('/')
+        // Call onComplete callback
+        if (onComplete) {
+          onComplete()
+        }
       } else {
         throw new Error(result.message || 'Failed to save settings')
       }

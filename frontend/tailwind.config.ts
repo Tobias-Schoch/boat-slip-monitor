@@ -9,16 +9,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: 'hsl(210, 20%, 6%)',      // Very dark blue-gray
-        card: 'hsl(210, 20%, 8%)',             // Slightly lighter
-        foreground: 'hsl(210, 10%, 95%)',      // Almost white text
+        background: 'hsl(222, 47%, 4%)',       // Much darker blue-black
+        card: 'hsl(222, 47%, 7%)',             // Very dark blue
+        foreground: 'hsl(210, 10%, 98%)',      // Pure white text
         primary: 'hsl(217, 91%, 60%)',         // Blue accent
-        accent: 'hsl(217, 91%, 50%)',          // Vibrant blue
-        muted: 'hsl(210, 15%, 20%)',           // Muted gray
-        border: 'hsl(210, 15%, 15%)',          // Subtle borders
-        success: 'hsl(142, 76%, 36%)',         // Green
-        warning: 'hsl(38, 92%, 50%)',          // Orange
-        error: 'hsl(0, 72%, 51%)',             // Red
+        accent: 'hsl(217, 91%, 65%)',          // Lighter vibrant blue
+        muted: 'hsl(217, 20%, 40%)',           // Blue-gray
+        border: 'hsl(217, 30%, 12%)',          // Subtle blue borders
+        success: 'hsl(142, 76%, 42%)',         // Brighter green
+        warning: 'hsl(38, 92%, 55%)',          // Brighter orange
+        error: 'hsl(0, 84%, 60%)',             // Brighter red
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
