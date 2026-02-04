@@ -15,6 +15,7 @@ def clean_html_for_diff(html: str) -> str:
     - <script> tags and content
     - CCM19 cookie consent manager elements
     - HTML comments
+    - Empty/dynamic attributes
     - Excessive whitespace
     """
     if not html:
@@ -29,24 +30,27 @@ def clean_html_for_diff(html: str) -> str:
     # Remove style tags and their content
     html = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL | re.IGNORECASE)
 
-    # Remove link tags (self-closing)
-    html = re.sub(r'<link[^>]*/?>', '', html, flags=re.IGNORECASE)
+    # Remove ALL link tags (stylesheets, preload, prefetch, etc.)
+    html = re.sub(r'<link\s[^>]*>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<link\s*/>', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'<link>', '', html, flags=re.IGNORECASE)
+    # Also catch malformed/partial link tags
+    html = re.sub(r'link\s+rel="[^"]*"[^>]*>', '', html, flags=re.IGNORECASE)
 
     # Remove noscript tags and their content
     html = re.sub(r'<noscript[^>]*>.*?</noscript>', '', html, flags=re.DOTALL | re.IGNORECASE)
 
-    # Remove CCM19 cookie consent elements
-    # Remove elements with ccm19 in class or id
-    html = re.sub(r'<[^>]*\s(class|id)=["\'][^"\']*ccm[^"\']*["\'][^>]*>.*?</[^>]+>', '', html, flags=re.DOTALL | re.IGNORECASE)
-    # Remove standalone ccm divs (self-closing or empty)
-    html = re.sub(r'<div[^>]*\s(class|id)=["\'][^"\']*ccm[^"\']*["\'][^>]*/?\s*>', '', html, flags=re.IGNORECASE)
+    # Remove CCM19 cookie consent elements - be very aggressive
+    # Remove ANY element with ccm anywhere in class, id, or href
+    html = re.sub(r'<[^>]*ccm[^>]*>.*?</[^>]+>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    html = re.sub(r'<[^>]*ccm[^>]*/?\s*>', '', html, flags=re.IGNORECASE)
+    # Remove ccm URLs
+    html = re.sub(r'https?://[^"\'>\s]*ccm[^"\'>\s]*', '', html, flags=re.IGNORECASE)
     # Remove data-ccm attributes
     html = re.sub(r'\s+data-ccm[a-z0-9-]*="[^"]*"', '', html, flags=re.IGNORECASE)
     # Remove ccm script/config blocks
     html = re.sub(r'CCM19\s*[=:]\s*\{[^}]*\}', '', html, flags=re.DOTALL | re.IGNORECASE)
     html = re.sub(r'window\.CCM19[^;]*;', '', html, flags=re.IGNORECASE)
-    # Remove ccm iframes
-    html = re.sub(r'<iframe[^>]*ccm[^>]*>.*?</iframe>', '', html, flags=re.DOTALL | re.IGNORECASE)
 
     # Remove HTML comments
     html = re.sub(r'<!--.*?-->', '', html, flags=re.DOTALL)
@@ -54,8 +58,15 @@ def clean_html_for_diff(html: str) -> str:
     # Remove meta tags
     html = re.sub(r'<meta[^>]*/?>', '', html, flags=re.IGNORECASE)
 
+    # Remove empty style attributes (style="")
+    html = re.sub(r'\s+style=""', '', html, flags=re.IGNORECASE)
+
     # Remove data-* attributes (often dynamic)
     html = re.sub(r'\s+data-[a-z0-9-]+="[^"]*"', '', html, flags=re.IGNORECASE)
+
+    # Remove crossorigin and preload/prefetch attributes
+    html = re.sub(r'\s+crossorigin="[^"]*"', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'\s+rel="(preload|prefetch)"', '', html, flags=re.IGNORECASE)
 
     # Normalize whitespace (collapse multiple spaces/newlines)
     html = re.sub(r'\s+', ' ', html)
