@@ -36,7 +36,7 @@ export default function SetupPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-muted">Loading...</p>
+          <p className="text-muted">Laden...</p>
         </div>
       </div>
     )
@@ -46,13 +46,13 @@ export default function SetupPage() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12 max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 px-4">
           <div className="text-6xl mb-4">🚤</div>
-          <h1 className="text-4xl font-bold text-foreground mb-3">
-            Welcome to Boat Slip Monitor
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+            Willkommen beim Bootsliegeplatz Monitor
           </h1>
-          <p className="text-muted text-lg">
-            Let's get you set up! Configure your notification channels and monitoring settings.
+          <p className="text-muted text-base md:text-lg">
+            Lass uns starten! Konfiguriere deine Benachrichtigungskanäle und Überwachungseinstellungen.
           </p>
         </div>
 
@@ -60,8 +60,8 @@ export default function SetupPage() {
         <SetupForm />
 
         {/* Footer */}
-        <div className="mt-12 text-center text-sm text-muted">
-          <p>Need help? Check the documentation or contact support.</p>
+        <div className="mt-12 text-center text-sm text-muted px-4">
+          <p>Brauchst du Hilfe? Schau in die Dokumentation oder kontaktiere den Support.</p>
         </div>
       </div>
     </div>

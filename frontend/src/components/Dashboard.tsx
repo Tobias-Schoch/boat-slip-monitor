@@ -17,9 +17,9 @@ interface DashboardProps {
 }
 
 const filterButtons: { id: FilterType; label: string; activeClass: string }[] = [
-  { id: 'all', label: 'All', activeClass: 'bg-primary text-white shadow-primary/30' },
-  { id: 'critical', label: 'Critical', activeClass: 'bg-error text-white shadow-error/30' },
-  { id: 'important', label: 'Important', activeClass: 'bg-warning text-white shadow-warning/30' },
+  { id: 'all', label: 'Alle', activeClass: 'bg-primary text-white shadow-primary/30' },
+  { id: 'critical', label: 'Kritisch', activeClass: 'bg-error text-white shadow-error/30' },
+  { id: 'important', label: 'Wichtig', activeClass: 'bg-warning text-white shadow-warning/30' },
 ]
 
 const COLLAPSED_LIMIT = 3
@@ -72,9 +72,9 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Letzte Änderungen</h2>
-          <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">Letzte Änderungen</h2>
+          <div className="flex flex-wrap gap-2">
             {filterButtons.map((btn) => (
               <motion.button
                 key={btn.id}
@@ -152,8 +152,8 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Letzter Check pro URL</h2>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">Letzter Check pro URL</h2>
           <span className="text-sm text-muted px-3 py-1 rounded-lg bg-white/5">
             {lastCheckPerUrl.length} URLs
           </span>

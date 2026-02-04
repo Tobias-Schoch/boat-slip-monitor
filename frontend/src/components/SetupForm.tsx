@@ -71,7 +71,7 @@ export function SetupForm({ onComplete }: SetupFormProps) {
 
     // Validate required fields
     if (!formData.telegram_bot_token || !formData.telegram_chat_id) {
-      setError('Telegram Bot Token and Chat ID are required')
+      setError('Telegram Bot-Token und Chat-ID sind erforderlich')
       return
     }
 
@@ -111,7 +111,7 @@ export function SetupForm({ onComplete }: SetupFormProps) {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-muted">Loading settings...</p>
+          <p className="text-muted">Einstellungen werden geladen...</p>
         </div>
       </div>
     )
@@ -120,56 +120,56 @@ export function SetupForm({ onComplete }: SetupFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Section Tabs */}
-      <div className="flex gap-2 border-b border-border pb-4">
+      <div className="flex flex-wrap gap-2 border-b border-border pb-4 overflow-x-auto">
         <button
           type="button"
           onClick={() => setActiveSection('telegram')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          className={`px-3 md:px-4 py-2 rounded-lg font-medium transition-colors text-sm md:text-base whitespace-nowrap ${
             activeSection === 'telegram'
               ? 'bg-primary text-white'
               : 'bg-card text-muted hover:text-foreground'
           }`}
         >
-          1. Telegram (Required)
+          1. Telegram (Pflicht)
         </button>
         <button
           type="button"
           onClick={() => setActiveSection('email')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          className={`px-3 md:px-4 py-2 rounded-lg font-medium transition-colors text-sm md:text-base whitespace-nowrap ${
             activeSection === 'email'
               ? 'bg-primary text-white'
               : 'bg-card text-muted hover:text-foreground'
           }`}
         >
-          2. Email (Optional)
+          2. E-Mail (Optional)
         </button>
         <button
           type="button"
           onClick={() => setActiveSection('advanced')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          className={`px-3 md:px-4 py-2 rounded-lg font-medium transition-colors text-sm md:text-base whitespace-nowrap ${
             activeSection === 'advanced'
               ? 'bg-primary text-white'
               : 'bg-card text-muted hover:text-foreground'
           }`}
         >
-          3. Advanced
+          3. Erweitert
         </button>
       </div>
 
       {/* Telegram Section */}
       {activeSection === 'telegram' && (
-        <div className="bg-card border border-border rounded-lg p-6 space-y-6 animate-fade-in">
+        <div className="bg-card border border-border rounded-lg p-4 md:p-6 space-y-6 animate-fade-in">
           <div>
             <h3 className="text-xl font-bold text-foreground mb-2">
-              🤖 Telegram Configuration
+              🤖 Telegram-Konfiguration
             </h3>
             <p className="text-sm text-muted mb-6">
-              Telegram is required for receiving notifications. Follow these steps:
+              Telegram wird für Benachrichtigungen benötigt. Folge diesen Schritten:
             </p>
 
             <div className="mb-6 p-4 bg-background rounded-lg space-y-3 text-sm">
               <div>
-                <span className="font-bold text-primary">Step 1:</span> Message{' '}
+                <span className="font-bold text-primary">Schritt 1:</span> Schreibe{' '}
                 <a
                   href="https://t.me/botfather"
                   target="_blank"
@@ -178,33 +178,33 @@ export function SetupForm({ onComplete }: SetupFormProps) {
                 >
                   @BotFather
                 </a>{' '}
-                on Telegram
+                auf Telegram
               </div>
               <div>
-                <span className="font-bold text-primary">Step 2:</span> Send{' '}
-                <code className="bg-muted px-2 py-1 rounded">/newbot</code> and follow
-                instructions
+                <span className="font-bold text-primary">Schritt 2:</span> Sende{' '}
+                <code className="bg-muted px-2 py-1 rounded">/newbot</code> und folge den
+                Anweisungen
               </div>
               <div>
-                <span className="font-bold text-primary">Step 3:</span> Copy the bot token
+                <span className="font-bold text-primary">Schritt 3:</span> Kopiere das Bot-Token
               </div>
               <div>
-                <span className="font-bold text-primary">Step 4:</span> Message your bot,
-                then visit{' '}
+                <span className="font-bold text-primary">Schritt 4:</span> Schreibe deinem Bot,
+                dann öffne{' '}
                 <code className="bg-muted px-2 py-1 rounded text-xs break-all">
-                  https://api.telegram.org/bot&lt;YOUR_TOKEN&gt;/getUpdates
+                  https://api.telegram.org/bot&lt;DEIN_TOKEN&gt;/getUpdates
                 </code>
               </div>
               <div>
-                <span className="font-bold text-primary">Step 5:</span> Find your Chat ID in
-                the response
+                <span className="font-bold text-primary">Schritt 5:</span> Finde deine Chat-ID in
+                der Antwort
               </div>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Bot Token *
+              Bot-Token *
             </label>
             <input
               type="text"
@@ -220,7 +220,7 @@ export function SetupForm({ onComplete }: SetupFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Chat ID *
+              Chat-ID *
             </label>
             <input
               type="text"
@@ -238,29 +238,29 @@ export function SetupForm({ onComplete }: SetupFormProps) {
 
       {/* Email Section */}
       {activeSection === 'email' && (
-        <div className="bg-card border border-border rounded-lg p-6 space-y-6 animate-fade-in">
+        <div className="bg-card border border-border rounded-lg p-4 md:p-6 space-y-6 animate-fade-in">
           <div>
             <h3 className="text-xl font-bold text-foreground mb-2">
-              📧 Email Configuration (Optional)
+              📧 E-Mail-Konfiguration (Optional)
             </h3>
             <p className="text-sm text-muted mb-4">
-              Add email notifications as a backup channel. For Gmail, use an{' '}
+              Füge E-Mail-Benachrichtigungen als Backup hinzu. Für Gmail nutze ein{' '}
               <a
                 href="https://myaccount.google.com/apppasswords"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-accent hover:underline"
               >
-                App Password
+                App-Passwort
               </a>
               .
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-medium text-foreground mb-2">
-                SMTP Host
+                SMTP-Server
               </label>
               <input
                 type="text"
@@ -273,7 +273,7 @@ export function SetupForm({ onComplete }: SetupFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                SMTP Port
+                SMTP-Port
               </label>
               <input
                 type="number"
@@ -287,20 +287,20 @@ export function SetupForm({ onComplete }: SetupFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                SMTP User
+                SMTP-Benutzer
               </label>
               <input
                 type="email"
                 value={formData.smtp_user}
                 onChange={(e) => setFormData({ ...formData, smtp_user: e.target.value })}
-                placeholder="your_email@gmail.com"
+                placeholder="deine_email@gmail.com"
                 className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
-            <div className="col-span-2">
+            <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-medium text-foreground mb-2">
-                SMTP Password (App Password)
+                SMTP-Passwort (App-Passwort)
               </label>
               <input
                 type="password"
@@ -308,14 +308,14 @@ export function SetupForm({ onComplete }: SetupFormProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, smtp_password: e.target.value })
                 }
-                placeholder="your_app_password"
+                placeholder="dein_app_passwort"
                 className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                From Address
+                Absender-Adresse
               </label>
               <input
                 type="text"
@@ -327,13 +327,13 @@ export function SetupForm({ onComplete }: SetupFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                To Address
+                Empfänger-Adresse
               </label>
               <input
                 type="email"
                 value={formData.smtp_to}
                 onChange={(e) => setFormData({ ...formData, smtp_to: e.target.value })}
-                placeholder="recipient@example.com"
+                placeholder="empfaenger@beispiel.de"
                 className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
@@ -343,18 +343,18 @@ export function SetupForm({ onComplete }: SetupFormProps) {
 
       {/* Advanced Section */}
       {activeSection === 'advanced' && (
-        <div className="bg-card border border-border rounded-lg p-6 space-y-6 animate-fade-in">
+        <div className="bg-card border border-border rounded-lg p-4 md:p-6 space-y-6 animate-fade-in">
           <div>
-            <h3 className="text-xl font-bold text-foreground mb-2">⚙️ Advanced Settings</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">⚙️ Erweiterte Einstellungen</h3>
             <p className="text-sm text-muted mb-4">
-              Fine-tune monitoring and notification behavior.
+              Überwachungs- und Benachrichtigungsverhalten anpassen.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Log Level
+                Log-Level
               </label>
               <select
                 value={formData.log_level}
@@ -370,7 +370,7 @@ export function SetupForm({ onComplete }: SetupFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Page Timeout (ms)
+                Seiten-Timeout (ms)
               </label>
               <input
                 type="number"
@@ -382,9 +382,9 @@ export function SetupForm({ onComplete }: SetupFormProps) {
               />
             </div>
 
-            <div className="col-span-2">
+            <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-medium text-foreground mb-2">
-                Check Interval (Working Hours 7-17h)
+                Check-Intervall (Arbeitszeit 7-17 Uhr)
               </label>
               <input
                 type="text"
@@ -396,13 +396,13 @@ export function SetupForm({ onComplete }: SetupFormProps) {
                 className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <p className="text-xs text-muted mt-1">
-                Cron format: every 5 minutes during working hours
+                Cron-Format: alle 5 Minuten während der Arbeitszeit
               </p>
             </div>
 
-            <div className="col-span-2">
+            <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-medium text-foreground mb-2">
-                Check Interval (Off Hours 0-6h, 18-23h)
+                Check-Intervall (Außerhalb 0-6 Uhr, 18-23 Uhr)
               </label>
               <input
                 type="text"
@@ -414,13 +414,13 @@ export function SetupForm({ onComplete }: SetupFormProps) {
                 className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <p className="text-xs text-muted mt-1">
-                Cron format: every 3 minutes during off hours
+                Cron-Format: alle 3 Minuten außerhalb der Arbeitszeit
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Max Screenshots per URL
+                Max. Screenshots pro URL
               </label>
               <input
                 type="number"
@@ -437,7 +437,7 @@ export function SetupForm({ onComplete }: SetupFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Screenshot Retention (days)
+                Screenshot-Aufbewahrung (Tage)
               </label>
               <input
                 type="number"
@@ -454,7 +454,7 @@ export function SetupForm({ onComplete }: SetupFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Notification Cooldown (minutes)
+                Benachrichtigungs-Pause (Minuten)
               </label>
               <input
                 type="number"
@@ -471,7 +471,7 @@ export function SetupForm({ onComplete }: SetupFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Max Notification Retries
+                Max. Benachrichtigungs-Versuche
               </label>
               <input
                 type="number"
@@ -505,9 +505,9 @@ export function SetupForm({ onComplete }: SetupFormProps) {
             else if (activeSection === 'advanced') setActiveSection('email')
           }}
           disabled={activeSection === 'telegram'}
-          className="px-6 py-2 rounded-lg font-medium bg-muted text-foreground hover:bg-border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 md:px-6 py-2 rounded-lg font-medium bg-muted text-foreground hover:bg-border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          ← Previous
+          ← Zurück
         </button>
 
         {activeSection !== 'advanced' ? (
@@ -517,23 +517,23 @@ export function SetupForm({ onComplete }: SetupFormProps) {
               if (activeSection === 'telegram') setActiveSection('email')
               else if (activeSection === 'email') setActiveSection('advanced')
             }}
-            className="px-6 py-2 rounded-lg font-medium bg-primary text-white hover:bg-accent transition-colors"
+            className="px-4 md:px-6 py-2 rounded-lg font-medium bg-primary text-white hover:bg-accent transition-colors"
           >
-            Next →
+            Weiter →
           </button>
         ) : (
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-2 rounded-lg font-medium bg-primary text-white hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 md:px-6 py-2 rounded-lg font-medium bg-primary text-white hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {saving ? (
               <>
                 <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                Saving...
+                Speichern...
               </>
             ) : (
-              '✓ Complete Setup'
+              '✓ Einrichtung abschließen'
             )}
           </button>
         )}

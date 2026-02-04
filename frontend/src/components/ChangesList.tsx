@@ -190,7 +190,7 @@ export function ChangesList() {
                 animate={{ opacity: 1 }}
                 className="text-center py-6 text-muted text-sm"
               >
-                — End of changes —
+                — Ende der Liste —
               </motion.div>
             )}
           </motion.div>

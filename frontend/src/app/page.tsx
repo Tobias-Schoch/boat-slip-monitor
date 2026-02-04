@@ -89,11 +89,11 @@ export default function Home() {
             >
               🚤
             </motion.div>
-            <h1 className="text-5xl font-bold mb-4">
-              <span className="gradient-text">Welcome to Boat Slip Monitor</span>
+            <h1 className="text-3xl md:text-5xl font-bold mb-4">
+              <span className="gradient-text">Willkommen beim Bootsliegeplatz Monitor</span>
             </h1>
-            <p className="text-muted text-xl max-w-2xl mx-auto leading-relaxed">
-              Let's get you set up with notifications and monitoring.
+            <p className="text-muted text-lg md:text-xl max-w-2xl mx-auto leading-relaxed px-4">
+              Lass uns Benachrichtigungen und Überwachung einrichten.
             </p>
           </motion.div>
 
@@ -141,7 +141,7 @@ export default function Home() {
               transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             />
           </div>
-          <p className="text-muted text-lg">Loading...</p>
+          <p className="text-muted text-lg">Laden...</p>
         </motion.div>
       </div>
     )
@@ -160,14 +160,14 @@ export default function Home() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 backdrop-blur-2xl border-b border-white/10">
         <div className="absolute inset-0 bg-card/60 -z-10" />
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex gap-2">
+            <div className="flex gap-1 md:gap-2 overflow-x-auto">
               {tabs.map((tab) => (
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  className={`relative px-3 md:px-6 py-2 md:py-3 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'text-foreground'
                       : 'text-muted hover:text-foreground'
@@ -182,12 +182,12 @@ export default function Home() {
                       transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                     />
                   )}
-                  <span className="relative z-10 flex items-center gap-2">
+                  <span className="relative z-10 flex items-center gap-1 md:gap-2">
                     {(() => {
                       const Icon = tabIcons[tab.id]
                       return <Icon className="w-4 h-4" />
                     })()}
-                    <span>{tab.label}</span>
+                    <span className="hidden sm:inline">{tab.label}</span>
                     {tab.id === 'urls' && (
                       <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary">
                         {urls.length}
@@ -217,7 +217,7 @@ export default function Home() {
                 />
               </span>
               <span className="text-xs font-medium text-foreground">
-                {isConnected ? 'Live' : 'Offline'}
+                {isConnected ? 'Aktiv' : 'Getrennt'}
               </span>
             </motion.div>
           </div>
@@ -225,7 +225,7 @@ export default function Home() {
       </nav>
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-10">
+      <main className="container mx-auto px-4 md:px-6 py-6 md:py-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -257,9 +257,9 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-8"
                 >
-                  <h2 className="text-3xl font-bold gradient-text mb-2">Settings</h2>
-                  <p className="text-muted text-lg">
-                    Configure your notification settings and monitoring preferences.
+                  <h2 className="text-2xl md:text-3xl font-bold gradient-text mb-2">Einstellungen</h2>
+                  <p className="text-muted text-base md:text-lg">
+                    Benachrichtigungen und Überwachungseinstellungen konfigurieren.
                   </p>
                 </motion.div>
                 <SetupForm
@@ -271,7 +271,7 @@ export default function Home() {
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
-                      Settings updated successfully!
+                      Einstellungen erfolgreich gespeichert!
                     `
                     document.body.appendChild(toast)
                     setTimeout(() => {
@@ -290,10 +290,10 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 mt-20">
-        <div className="container mx-auto px-6 py-8 text-center">
+      <footer className="border-t border-white/5 mt-12 md:mt-20">
+        <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 text-center">
           <p className="text-muted/60 text-sm">
-            🚤 Boat Slip Monitor v2.0 • Built with FastAPI & Next.js
+            🚤 Bootsliegeplatz Monitor v2.0 • Erstellt mit FastAPI & Next.js
           </p>
         </div>
       </footer>

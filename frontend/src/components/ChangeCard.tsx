@@ -115,7 +115,7 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
       <div className="absolute inset-0 bg-grid opacity-10" />
 
       {/* Content */}
-      <div className="relative p-6">
+      <div className="relative p-4 md:p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-start gap-4">
@@ -134,7 +134,7 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <h3 className="font-bold text-xl text-foreground">
-                  {change.url_name || 'Unknown URL'}
+                  {change.url_name || 'Unbekannte URL'}
                 </h3>
                 <motion.span
                   initial={{ scale: 0 }}
@@ -227,7 +227,7 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
 
           {/* Confidence meter */}
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs text-muted">Confidence</span>
+            <span className="text-xs text-muted">Sicherheit</span>
             <div className="w-20 h-2 rounded-full bg-white/10 overflow-hidden">
               <motion.div
                 className={`h-full ${config.text} bg-current`}

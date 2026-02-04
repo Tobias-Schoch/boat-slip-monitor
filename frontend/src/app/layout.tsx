@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Boat Slip Monitor',
-  description: 'Monitor boat slip registration pages for changes',
+  title: 'Bootsliegeplatz Monitor',
+  description: 'Überwache Bootsliegeplatz-Registrierungsseiten auf Änderungen',
 }
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="de">
       <body className="bg-background text-foreground antialiased">
         {children}
       </body>

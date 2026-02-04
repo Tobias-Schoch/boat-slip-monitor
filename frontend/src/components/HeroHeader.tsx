@@ -65,32 +65,34 @@ export function HeroHeader({ isConnected }: HeroHeaderProps) {
   return (
     <div className="relative min-h-[35vh] flex items-center overflow-hidden">
       {/* Floating Orbs Background */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none hidden md:block">
         <FloatingOrb
-          className="w-[500px] h-[500px] bg-primary/20 top-[10%] left-[5%]"
+          className="w-[200px] md:w-[500px] h-[200px] md:h-[500px] bg-primary/20 top-[10%] left-[5%]"
           animate={{ x: [0, 80, -40, 0], y: [0, -60, 40, 0] }}
           duration={20}
         />
         <FloatingOrb
-          className="w-[350px] h-[350px] bg-purple-500/15 top-[30%] right-[10%]"
+          className="w-[150px] md:w-[350px] h-[150px] md:h-[350px] bg-purple-500/15 top-[30%] right-[10%]"
           animate={{ x: [0, -60, 50, 0], y: [0, 80, -20, 0] }}
           duration={15}
         />
         <FloatingOrb
-          className="w-[250px] h-[250px] bg-accent/20 bottom-[15%] left-[25%]"
+          className="w-[100px] md:w-[250px] h-[100px] md:h-[250px] bg-accent/20 bottom-[15%] left-[25%]"
           animate={{ x: [0, 50, -30, 0], y: [0, -40, 60, 0] }}
           duration={18}
         />
       </div>
 
-      {/* Particle Field */}
-      <ParticleField />
+      {/* Particle Field - hidden on mobile */}
+      <div className="hidden md:block">
+        <ParticleField />
+      </div>
 
       {/* Grid Overlay */}
       <div className="absolute inset-0 bg-grid opacity-20" />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-6 py-12">
+      <div className="relative z-10 container mx-auto px-4 md:px-6 py-8 md:py-12">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -113,25 +115,25 @@ export function HeroHeader({ isConnected }: HeroHeaderProps) {
 
           {/* Title */}
           <motion.h1
-            className="text-5xl md:text-6xl lg:text-7xl font-black mb-4"
+            className="text-3xl md:text-5xl lg:text-7xl font-black mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8 }}
           >
             <span className="gradient-text">
-              Boat Slip Monitor
+              Bootsliegeplatz Monitor
             </span>
           </motion.h1>
 
           {/* Subtitle */}
           <motion.p
-            className="text-lg md:text-xl text-muted max-w-2xl mx-auto mb-8"
+            className="text-base md:text-xl text-muted max-w-2xl mx-auto mb-6 md:mb-8 px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.8 }}
           >
-            Real-time monitoring for boat slip availability.
-            <span className="text-primary font-semibold"> Never miss an opening.</span>
+            Echtzeit-Überwachung für Bootsliegeplätze.
+            <span className="text-primary font-semibold"> Keine Chance verpassen.</span>
           </motion.p>
 
           {/* Status Badge */}
@@ -154,7 +156,7 @@ export function HeroHeader({ isConnected }: HeroHeaderProps) {
               />
             </span>
             <span className="text-sm font-medium text-foreground">
-              {isConnected ? 'System Active' : 'Connecting...'}
+              {isConnected ? 'System aktiv' : 'Verbinde...'}
             </span>
           </motion.div>
         </motion.div>

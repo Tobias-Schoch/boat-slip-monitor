@@ -139,12 +139,18 @@
     animation: shimmer 2s linear infinite;
   }
 
-  /* Background effects */
+  /* Background effects - larger grid on mobile for performance */
   .bg-grid {
     background-image:
       linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
+    background-size: 100px 100px;
+  }
+
+  @media (min-width: 768px) {
+    .bg-grid {
+      background-size: 60px 60px;
+    }
   }
 
   .bg-dots {

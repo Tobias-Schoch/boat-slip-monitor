@@ -50,21 +50,21 @@ const initialFormData: UrlFormData = {
 }
 
 function validateUrl(url: string): string | null {
-  if (!url.trim()) return 'URL is required'
+  if (!url.trim()) return 'URL ist erforderlich'
   try {
     const parsed = new URL(url)
     if (!['http:', 'https:'].includes(parsed.protocol)) {
-      return 'URL must use http or https protocol'
+      return 'URL muss http oder https verwenden'
     }
     return null
   } catch {
-    return 'Invalid URL format'
+    return 'Ungültiges URL-Format'
   }
 }
 
 function validateName(name: string): string | null {
-  if (!name.trim()) return 'Name is required'
-  if (name.length > 255) return 'Name must be 255 characters or less'
+  if (!name.trim()) return 'Name ist erforderlich'
+  if (name.length > 255) return 'Name darf maximal 255 Zeichen haben'
   return null
 }
 
@@ -209,7 +209,7 @@ export function UrlList({
           <Button onClick={openAddModal}>Erste URL hinzufügen</Button>
         </motion.div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3 md:gap-4">
           <AnimatePresence mode="popLayout">
             {urls.map((url, index) => (
               <motion.div
@@ -342,7 +342,7 @@ export function UrlList({
 
           <Input
             label="Name"
-            placeholder="My Website"
+            placeholder="Meine Webseite"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             error={formErrors.name}
