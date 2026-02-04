@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Check, Change } from './useApi'
 
 // Use relative URLs when running from the same server (Docker container)
@@ -10,7 +10,40 @@ export function useSSE() {
   const [isConnected, setIsConnected] = useState(false)
   const eventSourceRef = useRef<EventSource | null>(null)
 
+  // Fetch initial data on mount
+  const fetchInitialData = useCallback(async () => {
+    try {
+      // Fetch recent checks
+      const checksResponse = await fetch(`${API_BASE}/api/checks?limit=50`)
+      if (checksResponse.ok) {
+        const checksData: Check[] = await checksResponse.json()
+        setChecks(checksData)
+      }
+
+      // Fetch recent changes (last 24 hours worth, up to 100)
+      const changesResponse = await fetch(`${API_BASE}/api/changes?limit=100`)
+      if (changesResponse.ok) {
+        const changesData: Change[] = await changesResponse.json()
+        // Filter to last 24 hours for dashboard display
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+        const recentChanges = changesData.filter(change => {
+          try {
+            return new Date(change.created_at) >= oneDayAgo
+          } catch {
+            return false
+          }
+        })
+        setChanges(recentChanges)
+      }
+    } catch (err) {
+      console.error('Failed to fetch initial data:', err)
+    }
+  }, [])
+
   useEffect(() => {
+    // Fetch initial data
+    fetchInitialData()
+
     // Initialize EventSource
     const eventSource = new EventSource(`${API_BASE}/api/events`)
     eventSourceRef.current = eventSource
@@ -28,10 +61,18 @@ export function useSSE() {
           console.log('SSE connected:', data.timestamp)
         } else if (data.type === 'check') {
           console.log('New check received:', data.data)
-          setChecks((prev) => [data.data, ...prev].slice(0, 100))
+          setChecks((prev) => {
+            // Avoid duplicates
+            if (prev.some(c => c.id === data.data.id)) return prev
+            return [data.data, ...prev].slice(0, 100)
+          })
         } else if (data.type === 'change') {
           console.log('New change received:', data.data)
-          setChanges((prev) => [data.data, ...prev].slice(0, 100))
+          setChanges((prev) => {
+            // Avoid duplicates
+            if (prev.some(c => c.id === data.data.id)) return prev
+            return [data.data, ...prev].slice(0, 100)
+          })
 
           // Show browser notification for critical changes
           if (data.data.priority === 'CRITICAL' && 'Notification' in window) {

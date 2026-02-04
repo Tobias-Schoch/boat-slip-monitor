@@ -10,6 +10,21 @@ interface CheckCardProps {
   index?: number
 }
 
+function formatTime(dateStr: string | undefined): string {
+  if (!dateStr) return '--:--:--'
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return '--:--:--'
+    return date.toLocaleTimeString('de-DE', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+  } catch {
+    return '--:--:--'
+  }
+}
+
 const statusConfig: Record<CheckStatus, {
   bg: string
   border: string
@@ -103,7 +118,7 @@ export function CheckCard({ check, index = 0 }: CheckCardProps) {
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              {new Date(check.timestamp).toLocaleTimeString()}
+              {formatTime(check.timestamp)}
             </span>
             <span className="flex items-center gap-1">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
