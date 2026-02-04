@@ -1,18 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Dashboard } from '@/components/Dashboard'
 import { UrlList } from '@/components/UrlList'
+import { SetupForm } from '@/components/SetupForm'
 import { useSSE } from '@/lib/useSSE'
 import { useApi } from '@/lib/useApi'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 export default function Home() {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'urls'>('dashboard')
-  const [setupChecked, setSetupChecked] = useState(false)
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'urls' | 'settings'>('dashboard')
+  const [isConfigured, setIsConfigured] = useState<boolean | null>(null)
+  const [showSetup, setShowSetup] = useState(false)
   const { checks, changes, isConnected } = useSSE()
   const { urls, loading } = useApi()
 
@@ -24,21 +24,57 @@ export default function Home() {
     try {
       const response = await fetch(`${API_BASE}/api/setup-status`)
       const data = await response.json()
+      setIsConfigured(data.configured)
 
+      // If not configured, show setup automatically
       if (!data.configured) {
-        // Not configured, redirect to setup
-        router.push('/setup')
-      } else {
-        setSetupChecked(true)
+        setShowSetup(true)
       }
     } catch (error) {
       console.error('Failed to check setup status:', error)
-      // If check fails, assume configured and continue
-      setSetupChecked(true)
+      // If check fails, assume not configured
+      setIsConfigured(false)
+      setShowSetup(true)
     }
   }
 
-  if (!setupChecked) {
+  const handleSetupComplete = () => {
+    setShowSetup(false)
+    setIsConfigured(true)
+    // Reload the page to start scheduler
+    window.location.reload()
+  }
+
+  // Show setup screen if not configured
+  if (showSetup || isConfigured === false) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-12 max-w-4xl">
+          {/* Header */}
+          <div className="text-center mb-12 animate-fade-in">
+            <div className="text-6xl mb-4">🚤</div>
+            <h1 className="text-4xl font-bold text-foreground mb-3">
+              Welcome to Boat Slip Monitor
+            </h1>
+            <p className="text-muted text-lg">
+              Let's get you set up! Configure your notification channels and monitoring settings.
+            </p>
+          </div>
+
+          {/* Setup Form */}
+          <SetupForm onComplete={handleSetupComplete} />
+
+          {/* Footer */}
+          <div className="mt-12 text-center text-sm text-muted">
+            <p>🚤 Boat Slip Monitor v2.0 • Monitoring German boat slip registration pages</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Loading state
+  if (isConfigured === null) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -81,23 +117,33 @@ export default function Home() {
           <nav className="flex gap-2 mt-6">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 activeTab === 'dashboard'
-                  ? 'bg-primary text-white'
-                  : 'bg-background text-muted hover:text-foreground'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/50'
+                  : 'bg-background text-muted hover:text-foreground hover:bg-card'
               }`}
             >
-              Dashboard
+              📊 Dashboard
             </button>
             <button
               onClick={() => setActiveTab('urls')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 activeTab === 'urls'
-                  ? 'bg-primary text-white'
-                  : 'bg-background text-muted hover:text-foreground'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/50'
+                  : 'bg-background text-muted hover:text-foreground hover:bg-card'
               }`}
             >
-              URLs ({urls?.length || 0})
+              🔗 URLs ({urls?.length || 0})
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                activeTab === 'settings'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/50'
+                  : 'bg-background text-muted hover:text-foreground hover:bg-card'
+              }`}
+            >
+              ⚙️ Settings
             </button>
           </nav>
         </div>
@@ -105,10 +151,21 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {activeTab === 'dashboard' ? (
-          <Dashboard checks={checks} changes={changes} />
-        ) : (
-          <UrlList urls={urls} loading={loading} />
+        {activeTab === 'dashboard' && <Dashboard checks={checks} changes={changes} />}
+        {activeTab === 'urls' && <UrlList urls={urls} loading={loading} />}
+        {activeTab === 'settings' && (
+          <div className="max-w-4xl mx-auto animate-fade-in">
+            <h2 className="text-2xl font-bold text-foreground mb-6">⚙️ Settings</h2>
+            <div className="bg-card border border-border rounded-lg p-6">
+              <p className="text-muted mb-6">
+                Update your notification settings and monitoring configuration.
+              </p>
+              <SetupForm onComplete={() => {
+                alert('Settings updated successfully! Reloading...')
+                window.location.reload()
+              }} />
+            </div>
+          </div>
         )}
       </main>
 
