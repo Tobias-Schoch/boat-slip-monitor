@@ -292,16 +292,36 @@ class ChangeDetector:
             keywords=[]
         )
 
-    def generate_diff(self, old_content: str, new_content: str) -> str:
-        """Generate unified diff between old and new content."""
+    def generate_diff(self, old_content: str, new_content: str, max_length: int = 5000) -> str:
+        """Generate human-readable diff between old and new content."""
         try:
-            # Use diff_match_patch for better diff generation
+            # Use diff_match_patch for diff generation
             diffs = self.dmp.diff_main(old_content, new_content)
             self.dmp.diff_cleanupSemantic(diffs)
 
-            # Convert to patch format (unified diff style)
-            patches = self.dmp.patch_make(old_content, diffs)
-            return self.dmp.patch_toText(patches)
+            # Build human-readable diff
+            lines = []
+            for op, text in diffs:
+                # Truncate very long text blocks
+                display_text = text[:500] + '...' if len(text) > 500 else text
+                # Clean up whitespace for display
+                display_text = display_text.strip()
+                if not display_text:
+                    continue
+
+                if op == -1:  # Deletion
+                    lines.append(f"- {display_text}")
+                elif op == 1:  # Addition
+                    lines.append(f"+ {display_text}")
+                # op == 0 is unchanged, we skip those for brevity
+
+            result = '\n'.join(lines)
+
+            # Truncate if too long
+            if len(result) > max_length:
+                result = result[:max_length] + '\n\n... (diff truncated)'
+
+            return result if result else 'No visible text changes (possibly whitespace/formatting only)'
         except Exception as e:
             logger.error(f'Failed to generate diff: {e}')
             return 'Diff generation failed'

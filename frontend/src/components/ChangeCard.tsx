@@ -49,9 +49,26 @@ const priorityConfig: Record<Priority, {
   },
 }
 
+function formatDate(dateStr: string | undefined): string {
+  if (!dateStr) return 'Unknown'
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return 'Unknown'
+    return date.toLocaleString()
+  } catch {
+    return 'Unknown'
+  }
+}
+
+function formatConfidence(confidence: number | undefined): number {
+  if (confidence === undefined || confidence === null || isNaN(confidence)) return 0
+  return Math.round(confidence * 100)
+}
+
 export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
   const [showDiff, setShowDiff] = useState(false)
   const config = priorityConfig[change.priority] || priorityConfig.INFO
+  const confidencePercent = formatConfidence(change.confidence)
 
   return (
     <motion.div
@@ -123,7 +140,7 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                {new Date(change.created_at).toLocaleString()}
+                {formatDate(change.created_at)}
               </p>
             </div>
           </div>
@@ -232,12 +249,12 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
               <motion.div
                 className={`h-full ${config.text} bg-current`}
                 initial={{ width: 0 }}
-                animate={{ width: `${change.confidence * 100}%` }}
+                animate={{ width: `${confidencePercent}%` }}
                 transition={{ duration: 1, delay: 0.5 }}
               />
             </div>
             <span className="text-xs font-mono text-foreground">
-              {Math.round(change.confidence * 100)}%
+              {confidencePercent}%
             </span>
           </div>
         </div>
@@ -253,9 +270,27 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
               className="mt-4 overflow-hidden"
             >
               <div className="p-4 bg-black/30 rounded-xl border border-white/5 overflow-x-auto">
-                <pre className="text-sm text-foreground font-mono whitespace-pre-wrap">
-                  {change.diff}
-                </pre>
+                <div className="text-sm font-mono space-y-1">
+                  {change.diff.split('\n').map((line, i) => {
+                    const isAddition = line.startsWith('+ ')
+                    const isDeletion = line.startsWith('- ')
+
+                    return (
+                      <div
+                        key={i}
+                        className={`px-2 py-0.5 rounded ${
+                          isAddition
+                            ? 'bg-success/20 text-success border-l-2 border-success'
+                            : isDeletion
+                            ? 'bg-error/20 text-error border-l-2 border-error'
+                            : 'text-muted'
+                        }`}
+                      >
+                        <span className="whitespace-pre-wrap break-all">{line}</span>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </motion.div>
           )}
