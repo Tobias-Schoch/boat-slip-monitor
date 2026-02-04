@@ -2,23 +2,25 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LayoutDashboard, Bell, Link2, Settings } from 'lucide-react'
+import { LayoutDashboard, Bell, Link2, Settings, FlaskConical } from 'lucide-react'
 import { Dashboard } from '@/components/Dashboard'
 import { UrlList } from '@/components/UrlList'
 import { ChangesList } from '@/components/ChangesList'
 import { SetupForm } from '@/components/SetupForm'
 import { HeroHeader } from '@/components/HeroHeader'
+import { TestDiffTab } from '@/components/TestDiffTab'
 import { useSSE } from '@/lib/useSSE'
 import { useApi } from '@/lib/useApi'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
-type TabId = 'dashboard' | 'changes' | 'urls' | 'settings'
+type TabId = 'dashboard' | 'changes' | 'urls' | 'test' | 'settings'
 
 const tabIcons = {
   dashboard: LayoutDashboard,
   changes: Bell,
   urls: Link2,
+  test: FlaskConical,
   settings: Settings,
 }
 
@@ -26,6 +28,7 @@ const tabs: { id: TabId; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'changes', label: 'Änderungen' },
   { id: 'urls', label: 'URLs' },
+  { id: 'test', label: 'Tester' },
   { id: 'settings', label: 'Einstellungen' },
 ]
 
@@ -249,6 +252,9 @@ export default function Home() {
                 onDeleteUrl={deleteUrl}
                 onToggleUrl={toggleUrl}
               />
+            )}
+            {activeTab === 'test' && (
+              <TestDiffTab />
             )}
             {activeTab === 'settings' && (
               <div className="max-w-4xl mx-auto">
