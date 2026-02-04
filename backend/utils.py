@@ -58,15 +58,27 @@ def clean_html_for_diff(html: str) -> str:
     # Remove meta tags
     html = re.sub(r'<meta[^>]*/?>', '', html, flags=re.IGNORECASE)
 
-    # Remove empty style attributes (style="")
-    html = re.sub(r'\s+style=""', '', html, flags=re.IGNORECASE)
+    # Remove ALL style attributes (often change dynamically)
+    html = re.sub(r'\s+style="[^"]*"', '', html, flags=re.IGNORECASE)
+
+    # Remove ALL class attributes (CSS classes change dynamically)
+    html = re.sub(r'\s+class="[^"]*"', '', html, flags=re.IGNORECASE)
+
+    # Remove id attributes (often dynamic)
+    html = re.sub(r'\s+id="[^"]*"', '', html, flags=re.IGNORECASE)
 
     # Remove data-* attributes (often dynamic)
     html = re.sub(r'\s+data-[a-z0-9-]+="[^"]*"', '', html, flags=re.IGNORECASE)
 
-    # Remove crossorigin and preload/prefetch attributes
+    # Remove other common dynamic attributes
     html = re.sub(r'\s+crossorigin="[^"]*"', '', html, flags=re.IGNORECASE)
-    html = re.sub(r'\s+rel="(preload|prefetch)"', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'\s+rel="[^"]*"', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'\s+aria-[a-z-]+="[^"]*"', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'\s+role="[^"]*"', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'\s+tabindex="[^"]*"', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'\s+onclick="[^"]*"', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'\s+onload="[^"]*"', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'\s+target="[^"]*"', '', html, flags=re.IGNORECASE)
 
     # Normalize whitespace (collapse multiple spaces/newlines)
     html = re.sub(r'\s+', ' ', html)
