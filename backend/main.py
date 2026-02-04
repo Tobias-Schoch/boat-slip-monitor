@@ -26,6 +26,7 @@ from backend.database import (
 from backend.scheduler import scheduler
 from backend.detector import change_detector
 from backend.utils import normalize_html, calculate_hash
+from backend.notifier import notifier
 
 
 async def get_url_or_404(db: AsyncSession, url_id: str) -> MonitoredUrl:
@@ -312,6 +313,97 @@ async def test_diff(request: TestDiffRequest):
         )
     except Exception as e:
         logger.error(f"Test diff failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/test-notifications/telegram")
+async def test_telegram_notification(
+    session: AsyncSession = Depends(get_db)
+):
+    """Send a test Telegram notification."""
+    if not settings.telegram_bot_token or not settings.telegram_chat_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Telegram not configured. Please configure in Settings."
+        )
+
+    # Create mock objects for testing (not saved to database)
+    # We need a Check object because Change references it
+    class MockCheck:
+        url_id = "test"
+
+    test_change = Change(
+        check_id="test",
+        priority=Priority.INFO,
+        type=ChangeType.CONTENT,
+        description="Dies ist eine Test-Benachrichtigung",
+        diff="<p>Test Diff Content</p>",
+        matched_keywords=[],
+        confidence=1.0
+    )
+    test_change.check = MockCheck()
+    test_change.id = "test-notification"
+
+    # Send only to Telegram
+    try:
+        success = await notifier._send_telegram(
+            change=test_change,
+            url_name="Test URL",
+            url="https://example.com",
+            session=session
+        )
+
+        if success:
+            return {"status": "success", "message": "Test-Telegram erfolgreich versendet"}
+        else:
+            return {"status": "error", "message": "Telegram-Versand fehlgeschlagen"}
+    except Exception as e:
+        logger.error(f"Test Telegram failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/test-notifications/email")
+async def test_email_notification(
+    session: AsyncSession = Depends(get_db)
+):
+    """Send a test Email notification."""
+    if not settings.smtp_host or not settings.smtp_to:
+        raise HTTPException(
+            status_code=400,
+            detail="Email not configured. Please configure in Settings."
+        )
+
+    # Create mock objects for testing (not saved to database)
+    class MockCheck:
+        url_id = "test"
+
+    test_change = Change(
+        check_id="test",
+        priority=Priority.INFO,
+        type=ChangeType.CONTENT,
+        description="Dies ist eine Test-Benachrichtigung",
+        diff="<p>Test Diff Content</p>",
+        matched_keywords=[],
+        confidence=1.0
+    )
+    test_change.check = MockCheck()
+    test_change.id = "test-notification"
+
+    # Send only to Email
+    try:
+        success = await notifier._send_email(
+            change=test_change,
+            url_name="Test URL",
+            url="https://example.com",
+            session=session
+        )
+
+        if success:
+            return {"status": "success", "message": "Test-E-Mail erfolgreich versendet"}
+        else:
+            return {"status": "error", "message": "E-Mail-Versand fehlgeschlagen"}
+    except Exception as e:
+        logger.error(f"Test Email failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

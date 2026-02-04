@@ -2,25 +2,27 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LayoutDashboard, Bell, Link2, Settings, FlaskConical } from 'lucide-react'
+import { LayoutDashboard, Bell, Link2, Settings, FlaskConical, TestTube } from 'lucide-react'
 import { Dashboard } from '@/components/Dashboard'
 import { UrlList } from '@/components/UrlList'
 import { ChangesList } from '@/components/ChangesList'
 import { SetupForm } from '@/components/SetupForm'
 import { HeroHeader } from '@/components/HeroHeader'
 import { TestDiffTab } from '@/components/TestDiffTab'
+import { TestNotifications } from '@/components/TestNotifications'
 import { useSSE } from '@/lib/useSSE'
 import { useApi } from '@/lib/useApi'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
-type TabId = 'dashboard' | 'changes' | 'urls' | 'test' | 'settings'
+type TabId = 'dashboard' | 'changes' | 'urls' | 'difftester' | 'test' | 'settings'
 
 const tabIcons = {
   dashboard: LayoutDashboard,
   changes: Bell,
   urls: Link2,
-  test: FlaskConical,
+  difftester: FlaskConical,
+  test: TestTube,
   settings: Settings,
 }
 
@@ -28,7 +30,8 @@ const tabs: { id: TabId; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'changes', label: 'Änderungen' },
   { id: 'urls', label: 'URLs' },
-  { id: 'test', label: 'Tester' },
+  { id: 'difftester', label: 'Diff-Tester' },
+  { id: 'test', label: 'Test' },
   { id: 'settings', label: 'Einstellungen' },
 ]
 
@@ -253,8 +256,11 @@ export default function Home() {
                 onToggleUrl={toggleUrl}
               />
             )}
-            {activeTab === 'test' && (
+            {activeTab === 'difftester' && (
               <TestDiffTab />
+            )}
+            {activeTab === 'test' && (
+              <TestNotifications />
             )}
             {activeTab === 'settings' && (
               <div className="max-w-4xl mx-auto">
