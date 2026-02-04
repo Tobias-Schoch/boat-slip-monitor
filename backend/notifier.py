@@ -14,10 +14,18 @@ from email.mime.image import MIMEImage
 
 from backend.config import settings
 from backend.database import Priority, NotificationChannel, Change, Notification, NotificationStatus
-from backend.diff_image import generate_diff_image
 
 
 logger = logging.getLogger(__name__)
+
+# Try to import diff_image, but make it optional
+try:
+    from backend.diff_image import generate_diff_image
+    DIFF_IMAGE_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Diff image generation not available: {e}")
+    DIFF_IMAGE_AVAILABLE = False
+    generate_diff_image = None
 
 
 class NotificationManager:
@@ -149,6 +157,10 @@ class NotificationManager:
 
     async def _generate_diff_image(self, change: Change, url_name: str) -> Optional[bytes]:
         """Generate diff image if diff is available."""
+        if not DIFF_IMAGE_AVAILABLE:
+            logger.info("Diff image generation not available")
+            return None
+
         if not change.diff:
             logger.info("No diff available, skipping image generation")
             return None
@@ -249,8 +261,12 @@ class NotificationManager:
         subject = f"🚨 {change.priority.value}: {url_name}"
         body = self._format_email_body(change, url_name, url)
 
-        # Generate diff image if available
-        diff_image = await self._generate_diff_image(change, url_name)
+        # Generate diff image if available (don't let failure block email)
+        diff_image = None
+        try:
+            diff_image = await self._generate_diff_image(change, url_name)
+        except Exception as e:
+            logger.error(f"Failed to generate diff image for email: {e}")
 
         async def send():
             if diff_image:

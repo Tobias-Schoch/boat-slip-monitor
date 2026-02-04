@@ -148,4 +148,35 @@ export async function deleteApi<T = void>(endpoint: string): Promise<T> {
   return text ? JSON.parse(text) : ({} as T)
 }
 
+/**
+ * Test diff request/response types.
+ */
+export interface TestDiffRequest {
+  original_html: string
+  new_html: string
+}
+
+export interface TestDiffResponse {
+  has_changed: boolean
+  type: string | null
+  priority: 'INFO' | 'IMPORTANT' | 'CRITICAL'
+  confidence: number
+  description: string
+  diff: string | null
+  matched_keywords: string[] | null
+}
+
+/**
+ * Test the diff logic with two HTML inputs.
+ */
+export async function testDiff(
+  originalHtml: string,
+  newHtml: string
+): Promise<TestDiffResponse> {
+  return postApi<TestDiffResponse, TestDiffRequest>('/api/test-diff', {
+    original_html: originalHtml,
+    new_html: newHtml,
+  })
+}
+
 export { API_BASE }

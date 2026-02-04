@@ -21,9 +21,11 @@ from backend.config import settings
 from backend.database import (
     init_db, seed_urls, get_db,
     MonitoredUrl, Check, Change, Screenshot, Notification,
-    CheckStatus, Priority
+    CheckStatus, Priority, ChangeType
 )
 from backend.scheduler import scheduler
+from backend.detector import change_detector
+from backend.utils import normalize_html, calculate_hash
 
 
 async def get_url_or_404(db: AsyncSession, url_id: str) -> MonitoredUrl:
@@ -178,6 +180,23 @@ class SettingsRequest(BaseModel):
     max_notification_retries: int = 3
 
 
+class TestDiffRequest(BaseModel):
+    """Request model for testing diff logic."""
+    original_html: str
+    new_html: str
+
+
+class TestDiffResponse(BaseModel):
+    """Response model for test diff."""
+    has_changed: bool
+    type: Optional[str]
+    priority: str
+    confidence: float
+    description: str
+    diff: Optional[str]
+    matched_keywords: Optional[List[str]]
+
+
 # API Endpoints
 @app.get("/health")
 async def health_check():
@@ -253,6 +272,46 @@ async def update_settings(
         }
     except Exception as e:
         logger.error(f"Failed to update settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/test-diff", response_model=TestDiffResponse)
+async def test_diff(request: TestDiffRequest):
+    """
+    Test the diff logic with two HTML inputs.
+
+    Uses the same change detection logic as the real monitoring.
+    """
+    try:
+        # Normalize both HTML inputs
+        original_normalized = normalize_html(request.original_html)
+        new_normalized = normalize_html(request.new_html)
+
+        # Generate hashes
+        original_hash = calculate_hash(original_normalized)
+        new_hash = calculate_hash(new_normalized)
+
+        # Run change detection
+        result = await change_detector.detect_changes(
+            previous_html_normalized=original_normalized,
+            previous_html_original=request.original_html,
+            current_html=request.new_html,
+            current_normalized_html=new_normalized,
+            previous_html_hash=original_hash,
+            current_html_hash=new_hash
+        )
+
+        return TestDiffResponse(
+            has_changed=result.has_changed,
+            type=result.change_type.value if result.change_type else None,
+            priority=result.priority.value,
+            confidence=result.confidence,
+            description=result.description,
+            diff=result.diff,
+            matched_keywords=result.matched_keywords
+        )
+    except Exception as e:
+        logger.error(f"Test diff failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
