@@ -411,12 +411,24 @@ async def event_stream(db: AsyncSession = Depends(get_db)):
 # Serve frontend static files (if they exist)
 frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
 if frontend_dist.exists():
-    app.mount("/assets", StaticFiles(directory=frontend_dist / "assets"), name="assets")
+    # Only mount assets if the directory exists
+    assets_dir = frontend_dist / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    # Also mount _next if it exists (Next.js static files)
+    next_dir = frontend_dist / "_next"
+    if next_dir.exists():
+        app.mount("/_next", StaticFiles(directory=next_dir), name="next")
 
     @app.get("/")
     async def serve_frontend():
         """Serve frontend index.html."""
-        return FileResponse(frontend_dist / "index.html")
+        index_file = frontend_dist / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+        else:
+            return {"message": "Frontend not built. Please run: cd frontend && npm run build"}
 
 
 if __name__ == "__main__":
