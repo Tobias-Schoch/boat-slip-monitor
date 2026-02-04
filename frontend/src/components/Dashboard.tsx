@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Check, Change, MonitoredUrl } from '@/lib/useApi'
 import { CheckCard } from './CheckCard'
@@ -13,6 +13,15 @@ interface DashboardProps {
   checks: Check[]
   changes: Change[]
   urls?: MonitoredUrl[]
+}
+
+function getCronIntervalMinutes(): number {
+  const hour = new Date().getHours()
+  // Working hours (7-17): 5 min, Off hours (0-6, 18-23): 3 min
+  if (hour >= 7 && hour < 18) {
+    return 5
+  }
+  return 3
 }
 
 const filterButtons: { id: FilterType; label: string; activeClass: string }[] = [
@@ -32,6 +41,20 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
   })
 
   const criticalCount = changes.filter((c) => c.priority === 'CRITICAL').length
+
+  // Filter checks to only show those from the last cron interval
+  const cronInterval = getCronIntervalMinutes()
+  const recentChecks = useMemo(() => {
+    const cutoff = new Date(Date.now() - cronInterval * 60 * 1000)
+    return checks.filter((check) => {
+      try {
+        const checkTime = new Date(check.timestamp)
+        return checkTime >= cutoff
+      } catch {
+        return false
+      }
+    })
+  }, [checks, cronInterval])
 
   return (
     <div className="space-y-10">
@@ -113,10 +136,15 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <h2 className="text-2xl font-bold text-foreground mb-6">Recent Checks</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-foreground">Recent Checks</h2>
+          <span className="text-sm text-muted px-3 py-1 rounded-lg bg-white/5">
+            Last {cronInterval} min
+          </span>
+        </div>
 
         <AnimatePresence mode="wait">
-          {checks.length === 0 ? (
+          {recentChecks.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -131,9 +159,9 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
               >
                 ⏳
               </motion.div>
-              <h3 className="text-xl font-bold text-foreground mb-2">Waiting for first check...</h3>
+              <h3 className="text-xl font-bold text-foreground mb-2">No checks in the last {cronInterval} minutes</h3>
               <p className="text-muted">
-                The monitoring system is initializing
+                Waiting for the next check cycle...
               </p>
             </motion.div>
           ) : (
@@ -144,21 +172,9 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
               exit={{ opacity: 0 }}
               className="space-y-3"
             >
-              {checks.slice(0, 10).map((check, index) => (
+              {recentChecks.map((check, index) => (
                 <CheckCard key={check.id} check={check} index={index} />
               ))}
-
-              {checks.length > 10 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-4"
-                >
-                  <span className="text-muted text-sm">
-                    Showing 10 of {checks.length} recent checks
-                  </span>
-                </motion.div>
-              )}
             </motion.div>
           )}
         </AnimatePresence>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Dashboard } from '@/components/Dashboard'
 import { UrlList } from '@/components/UrlList'
+import { ChangesList } from '@/components/ChangesList'
 import { SetupForm } from '@/components/SetupForm'
 import { HeroHeader } from '@/components/HeroHeader'
 import { useSSE } from '@/lib/useSSE'
@@ -11,10 +12,11 @@ import { useApi } from '@/lib/useApi'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
-type TabId = 'dashboard' | 'urls' | 'settings'
+type TabId = 'dashboard' | 'changes' | 'urls' | 'settings'
 
 const tabs: { id: TabId; label: string; icon: string }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+  { id: 'changes', label: 'Changes', icon: '🔔' },
   { id: 'urls', label: 'URLs', icon: '🔗' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
 ]
@@ -223,6 +225,9 @@ export default function Home() {
           >
             {activeTab === 'dashboard' && (
               <Dashboard checks={checks} changes={changes} urls={urls} />
+            )}
+            {activeTab === 'changes' && (
+              <ChangesList />
             )}
             {activeTab === 'urls' && (
               <UrlList

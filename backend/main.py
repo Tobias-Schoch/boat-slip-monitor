@@ -454,6 +454,7 @@ async def get_changes(
     url_id: Optional[str] = Query(None),
     priority: Optional[Priority] = Query(None),
     limit: int = Query(50, le=200),
+    offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db)
 ):
     """Get detected changes."""
@@ -467,7 +468,7 @@ async def get_changes(
     if url_id:
         query = query.join(Check).where(Check.url_id == url_id)
 
-    query = query.order_by(desc(Change.created_at)).limit(limit)
+    query = query.order_by(desc(Change.created_at)).offset(offset).limit(limit)
 
     result = await db.execute(query)
     changes = result.scalars().all()
