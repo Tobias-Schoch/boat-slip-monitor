@@ -332,14 +332,28 @@ async def test_telegram_notification(
 
     mock_check = SimpleNamespace(url_id="test")
 
+    # Create a more realistic diff with visible changes
+    test_diff = """
+    <div class="content">
+        <h2>Bootsliegeplätze verfügbar</h2>
+        <p class="removed">Aktuell sind <span class="highlight">3 Plätze</span> verfügbar.</p>
+        <p class="added">Aktuell sind <span class="highlight">5 Plätze</span> verfügbar.</p>
+        <ul>
+            <li>Platz A1 - Verfügbar</li>
+            <li class="added">Platz B2 - Neu verfügbar</li>
+            <li>Platz C3 - Belegt</li>
+        </ul>
+    </div>
+    """
+
     mock_change = SimpleNamespace(
         id="test-notification",
         check_id="test",
         priority=Priority.INFO,
         type=ChangeType.CONTENT,
-        description="Dies ist eine Test-Benachrichtigung",
-        diff="<p>Test Diff Content</p>",
-        matched_keywords=[],
+        description="Dies ist eine Test-Benachrichtigung vom Boat Monitor",
+        diff=test_diff,
+        matched_keywords=["verfügbar", "Plätze"],
         confidence=1.0,
         check=mock_check
     )
@@ -378,14 +392,28 @@ async def test_email_notification(
 
     mock_check = SimpleNamespace(url_id="test")
 
+    # Create a more realistic diff with visible changes
+    test_diff = """
+    <div class="content">
+        <h2>Bootsliegeplätze verfügbar</h2>
+        <p class="removed">Aktuell sind <span class="highlight">3 Plätze</span> verfügbar.</p>
+        <p class="added">Aktuell sind <span class="highlight">5 Plätze</span> verfügbar.</p>
+        <ul>
+            <li>Platz A1 - Verfügbar</li>
+            <li class="added">Platz B2 - Neu verfügbar</li>
+            <li>Platz C3 - Belegt</li>
+        </ul>
+    </div>
+    """
+
     mock_change = SimpleNamespace(
         id="test-notification",
         check_id="test",
         priority=Priority.INFO,
         type=ChangeType.CONTENT,
-        description="Dies ist eine Test-Benachrichtigung",
-        diff="<p>Test Diff Content</p>",
-        matched_keywords=[],
+        description="Dies ist eine Test-Benachrichtigung vom Boat Monitor",
+        diff=test_diff,
+        matched_keywords=["verfügbar", "Plätze"],
         confidence=1.0,
         check=mock_check
     )
