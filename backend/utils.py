@@ -4,6 +4,46 @@ import hashlib
 from typing import Tuple
 
 
+def clean_html(html: str, aggressive: bool = True) -> str:
+    """
+    Clean HTML content with configurable aggressiveness.
+
+    Args:
+        html: Raw HTML string
+        aggressive: If True, removes all attributes and normalizes heavily.
+                   If False, does light cleaning for diff display.
+
+    Returns:
+        Cleaned HTML string
+    """
+    if not html:
+        return ""
+
+    if not aggressive:
+        # Light cleaning for diff display - keeps more content visible
+        # Extract body only
+        body_match = re.search(r'<body[^>]*>(.*?)</body>', html, re.DOTALL | re.IGNORECASE)
+        if body_match:
+            html = body_match.group(1)
+
+        # Remove script tags
+        html = re.sub(r'<script[^>]*>.*?</script>', '', html, flags=re.DOTALL | re.IGNORECASE)
+
+        # Remove style tags
+        html = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL | re.IGNORECASE)
+
+        # Remove HTML comments
+        html = re.sub(r'<!--.*?-->', '', html, flags=re.DOTALL)
+
+        # Normalize whitespace a bit (but keep structure)
+        html = re.sub(r'\n\s*\n', '\n', html)
+
+        return html.strip()
+
+    # Aggressive cleaning (original clean_html_for_diff behavior)
+    return clean_html_for_diff(html)
+
+
 def clean_html_for_diff(html: str) -> str:
     """
     Clean HTML for diff comparison by removing noise elements.

@@ -1,17 +1,20 @@
 """Multi-channel notification system with priority routing."""
 import asyncio
+import io
 import logging
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 
-from telegram import Bot
+from telegram import Bot, InputFile
 from telegram.error import TelegramError
 import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 
 from backend.config import settings
 from backend.database import Priority, NotificationChannel, Change, Notification, NotificationStatus
+from backend.diff_image import generate_diff_image
 
 
 logger = logging.getLogger(__name__)
@@ -110,6 +113,58 @@ class NotificationManager:
         cooldown = timedelta(minutes=settings.notification_cooldown_minutes)
         return datetime.now() - last_sent < cooldown
 
+    async def _send_with_retry(
+        self,
+        send_func,
+        notification: Notification,
+        channel_name: str,
+        change: Change,
+        session
+    ) -> bool:
+        """Generic retry logic for all notification channels."""
+        for attempt in range(settings.max_notification_retries):
+            try:
+                await send_func()
+
+                notification.status = NotificationStatus.SENT
+                notification.sent_at = datetime.utcnow()
+                await session.commit()
+
+                logger.info(f"{channel_name} notification sent for change {change.id}")
+                return True
+
+            except Exception as e:
+                logger.error(f"{channel_name} send failed (attempt {attempt + 1}): {e}")
+                notification.retry_count = attempt + 1
+                notification.error = str(e)
+                await session.commit()
+
+                if attempt < settings.max_notification_retries - 1:
+                    # Exponential backoff: 5s, 15s, 45s
+                    await asyncio.sleep(5 * (3 ** attempt))
+
+        notification.status = NotificationStatus.FAILED
+        await session.commit()
+        return False
+
+    async def _generate_diff_image(self, change: Change, url_name: str) -> Optional[bytes]:
+        """Generate diff image if diff is available."""
+        if not change.diff:
+            return None
+
+        try:
+            image_bytes = await generate_diff_image(
+                diff_text=change.diff,
+                url_name=url_name,
+                description=change.description,
+                priority=change.priority.value
+            )
+            logger.info(f"Generated diff image ({len(image_bytes)} bytes)")
+            return image_bytes
+        except Exception as e:
+            logger.error(f"Failed to generate diff image: {e}")
+            return None
+
     async def _send_telegram(
         self,
         change: Change,
@@ -117,7 +172,7 @@ class NotificationManager:
         url: str,
         session
     ) -> bool:
-        """Send Telegram notification."""
+        """Send Telegram notification with diff image."""
         if not settings.telegram_bot_token or not settings.telegram_chat_id:
             logger.warning("Telegram not configured")
             return False
@@ -135,35 +190,27 @@ class NotificationManager:
 
         message = self._format_message(change, url_name, url)
 
-        # Retry logic
-        for attempt in range(settings.max_notification_retries):
-            try:
+        # Generate diff image if available
+        diff_image = await self._generate_diff_image(change, url_name)
+
+        async def send():
+            if diff_image:
+                # Send image with caption
+                await self.telegram_bot.send_photo(
+                    chat_id=settings.telegram_chat_id,
+                    photo=InputFile(io.BytesIO(diff_image), filename='diff.png'),
+                    caption=message,
+                    parse_mode='HTML'
+                )
+            else:
+                # Send text only
                 await self.telegram_bot.send_message(
                     chat_id=settings.telegram_chat_id,
                     text=message,
                     parse_mode='HTML'
                 )
 
-                notification.status = NotificationStatus.SENT
-                notification.sent_at = datetime.utcnow()
-                await session.commit()
-
-                logger.info(f"Telegram notification sent for change {change.id}")
-                return True
-
-            except TelegramError as e:
-                logger.error(f"Telegram send failed (attempt {attempt + 1}): {e}")
-                notification.retry_count = attempt + 1
-                notification.error = str(e)
-                await session.commit()
-
-                if attempt < settings.max_notification_retries - 1:
-                    # Exponential backoff: 5s, 15s, 45s
-                    await asyncio.sleep(5 * (3 ** attempt))
-
-        notification.status = NotificationStatus.FAILED
-        await session.commit()
-        return False
+        return await self._send_with_retry(send, notification, "Telegram", change, session)
 
     async def _send_email(
         self,
@@ -172,7 +219,7 @@ class NotificationManager:
         url: str,
         session
     ) -> bool:
-        """Send email notification."""
+        """Send email notification with diff image."""
         if not settings.smtp_host or not settings.smtp_to:
             logger.warning("Email not configured")
             return False
@@ -189,48 +236,49 @@ class NotificationManager:
         subject = f"🚨 {change.priority.value}: {url_name}"
         body = self._format_email_body(change, url_name, url)
 
-        # Retry logic
-        for attempt in range(settings.max_notification_retries):
-            try:
-                msg = MIMEMultipart('alternative')
-                msg['Subject'] = subject
-                msg['From'] = settings.smtp_from
-                msg['To'] = settings.smtp_to
+        # Generate diff image if available
+        diff_image = await self._generate_diff_image(change, url_name)
 
-                # Add HTML and plain text parts
-                text_part = MIMEText(body, 'plain')
+        async def send():
+            # Use mixed for attachments, related for inline images
+            msg = MIMEMultipart('mixed')
+            msg['Subject'] = subject
+            msg['From'] = settings.smtp_from
+            msg['To'] = settings.smtp_to
+
+            # Create the body part
+            body_part = MIMEMultipart('alternative')
+            text_part = MIMEText(body, 'plain')
+
+            # HTML body with inline image reference if available
+            if diff_image:
+                html_body = body.replace('\n', '<br>')
+                html_body += '<br><br><img src="cid:diff_image" style="max-width: 100%; border-radius: 12px;">'
+                html_part = MIMEText(html_body, 'html')
+            else:
                 html_part = MIMEText(body.replace('\n', '<br>'), 'html')
-                msg.attach(text_part)
-                msg.attach(html_part)
 
-                await aiosmtplib.send(
-                    msg,
-                    hostname=settings.smtp_host,
-                    port=settings.smtp_port,
-                    username=settings.smtp_user,
-                    password=settings.smtp_password,
-                    start_tls=True
-                )
+            body_part.attach(text_part)
+            body_part.attach(html_part)
+            msg.attach(body_part)
 
-                notification.status = NotificationStatus.SENT
-                notification.sent_at = datetime.utcnow()
-                await session.commit()
+            # Attach diff image if available
+            if diff_image:
+                image_part = MIMEImage(diff_image, _subtype='png')
+                image_part.add_header('Content-ID', '<diff_image>')
+                image_part.add_header('Content-Disposition', 'inline', filename='diff.png')
+                msg.attach(image_part)
 
-                logger.info(f"Email notification sent for change {change.id}")
-                return True
+            await aiosmtplib.send(
+                msg,
+                hostname=settings.smtp_host,
+                port=settings.smtp_port,
+                username=settings.smtp_user,
+                password=settings.smtp_password,
+                start_tls=True
+            )
 
-            except Exception as e:
-                logger.error(f"Email send failed (attempt {attempt + 1}): {e}")
-                notification.retry_count = attempt + 1
-                notification.error = str(e)
-                await session.commit()
-
-                if attempt < settings.max_notification_retries - 1:
-                    await asyncio.sleep(5 * (3 ** attempt))
-
-        notification.status = NotificationStatus.FAILED
-        await session.commit()
-        return False
+        return await self._send_with_retry(send, notification, "Email", change, session)
 
     def _format_message(self, change: Change, url_name: str, url: str) -> str:
         """Format message for notifications."""

@@ -7,6 +7,8 @@ import type { Check, Change, MonitoredUrl } from '@/lib/useApi'
 import { CheckCard } from './CheckCard'
 import { ChangeCard } from './ChangeCard'
 import { StatsSection } from './StatsSection'
+import { FilterButtons, type FilterButton } from './ui/FilterButtons'
+import { EmptyState } from './ui/EmptyState'
 
 type FilterType = 'all' | 'critical' | 'important'
 
@@ -16,7 +18,7 @@ interface DashboardProps {
   urls?: MonitoredUrl[]
 }
 
-const filterButtons: { id: FilterType; label: string; activeClass: string }[] = [
+const filterButtonsConfig: FilterButton<FilterType>[] = [
   { id: 'all', label: 'Alle', activeClass: 'bg-primary text-white shadow-primary/30' },
   { id: 'critical', label: 'Kritisch', activeClass: 'bg-error text-white shadow-error/30' },
   { id: 'important', label: 'Wichtig', activeClass: 'bg-warning text-white shadow-warning/30' },
@@ -74,46 +76,22 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-foreground">Letzte Änderungen</h2>
-          <div className="flex flex-wrap gap-2">
-            {filterButtons.map((btn) => (
-              <motion.button
-                key={btn.id}
-                onClick={() => setFilter(btn.id)}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                  filter === btn.id
-                    ? `${btn.activeClass} shadow-lg`
-                    : 'bg-white/5 text-muted hover:text-foreground hover:bg-white/10'
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {btn.label}
-              </motion.button>
-            ))}
-          </div>
+          <FilterButtons
+            buttons={filterButtonsConfig}
+            activeFilter={filter}
+            onChange={setFilter}
+          />
         </div>
 
         <AnimatePresence mode="wait">
           {filteredChanges.length === 0 ? (
-            <motion.div
+            <EmptyState
               key="empty"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="glass-ultra rounded-2xl p-16 text-center"
-            >
-              <motion.div
-                className="mb-6 flex justify-center"
-                animate={{ y: [-5, 5, -5] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <Search className="w-16 h-16 text-muted" />
-              </motion.div>
-              <h3 className="text-xl font-bold text-foreground mb-2">Keine Änderungen gefunden</h3>
-              <p className="text-muted">
-                Checks laufen automatisch alle 3-5 Minuten
-              </p>
-            </motion.div>
+              icon={Search}
+              title="Keine Änderungen gefunden"
+              description="Checks laufen automatisch alle 3-5 Minuten"
+              animation="bounce"
+            />
           ) : (
             <motion.div
               key="list"
@@ -161,25 +139,13 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
 
         <AnimatePresence mode="wait">
           {lastCheckPerUrl.length === 0 ? (
-            <motion.div
+            <EmptyState
               key="empty"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="glass-ultra rounded-2xl p-16 text-center"
-            >
-              <motion.div
-                className="mb-6 flex justify-center"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              >
-                <Clock className="w-16 h-16 text-muted" />
-              </motion.div>
-              <h3 className="text-xl font-bold text-foreground mb-2">Noch keine Checks vorhanden</h3>
-              <p className="text-muted">
-                Warte auf den ersten Check-Zyklus...
-              </p>
-            </motion.div>
+              icon={Clock}
+              title="Noch keine Checks vorhanden"
+              description="Warte auf den ersten Check-Zyklus..."
+              animation="rotate"
+            />
           ) : (
             <motion.div
               key="list"

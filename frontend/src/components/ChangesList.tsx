@@ -5,13 +5,16 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Loader2 } from 'lucide-react'
 import type { Change } from '@/lib/useApi'
 import { ChangeCard } from './ChangeCard'
+import { FilterButtons, type FilterButton } from './ui/FilterButtons'
+import { EmptyState } from './ui/EmptyState'
+import { LoadingSpinner } from './ui/LoadingSpinner'
+import { fetchApi } from '@/lib/api'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 const PAGE_SIZE = 20
 
 type FilterPriority = 'all' | 'CRITICAL' | 'IMPORTANT' | 'INFO'
 
-const filterButtons: { id: FilterPriority; label: string; activeClass: string }[] = [
+const filterButtonsConfig: FilterButton<FilterPriority>[] = [
   { id: 'all', label: 'Alle', activeClass: 'bg-primary text-white shadow-primary/30' },
   { id: 'CRITICAL', label: 'Kritisch', activeClass: 'bg-error text-white shadow-error/30' },
   { id: 'IMPORTANT', label: 'Wichtig', activeClass: 'bg-warning text-white shadow-warning/30' },
@@ -29,17 +32,13 @@ export function ChangesList() {
   const fetchChanges = useCallback(async (pageNum: number, priority: FilterPriority, append = false) => {
     try {
       setLoading(true)
-      const params = new URLSearchParams()
-      params.append('limit', String(PAGE_SIZE))
-      params.append('offset', String(pageNum * PAGE_SIZE))
-      if (priority !== 'all') {
-        params.append('priority', priority)
+      const params: Record<string, string | number | undefined> = {
+        limit: PAGE_SIZE,
+        offset: pageNum * PAGE_SIZE,
+        priority: priority !== 'all' ? priority : undefined,
       }
 
-      const response = await fetch(`${API_BASE}/api/changes?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch changes')
-
-      const data: Change[] = await response.json()
+      const data = await fetchApi<Change[]>('/api/changes', params)
 
       if (append) {
         setChanges(prev => [...prev, ...data])
@@ -85,66 +84,34 @@ export function ChangesList() {
         </div>
 
         {/* Filter Buttons */}
-        <div className="flex gap-2">
-          {filterButtons.map((btn) => (
-            <motion.button
-              key={btn.id}
-              onClick={() => handleFilterChange(btn.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                filter === btn.id
-                  ? `${btn.activeClass} shadow-lg`
-                  : 'bg-white/5 text-muted hover:text-foreground hover:bg-white/10'
-              }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {btn.label}
-            </motion.button>
-          ))}
-        </div>
+        <FilterButtons
+          buttons={filterButtonsConfig}
+          activeFilter={filter}
+          onChange={handleFilterChange}
+        />
       </div>
 
       {/* Changes List */}
       <AnimatePresence mode="wait">
         {loading && changes.length === 0 ? (
-          <motion.div
+          <LoadingSpinner
             key="loading"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex items-center justify-center py-16"
-          >
-            <div className="text-center">
-              <motion.div
-                className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              />
-              <p className="text-muted">Änderungen werden geladen...</p>
-            </div>
-          </motion.div>
+            size="md"
+            message="Änderungen werden geladen..."
+            className="py-16"
+          />
         ) : changes.length === 0 ? (
-          <motion.div
+          <EmptyState
             key="empty"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="glass-ultra rounded-2xl p-16 text-center"
-          >
-            <motion.div
-              className="mb-6 flex justify-center"
-              animate={{ y: [-5, 5, -5] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <Search className="w-16 h-16 text-muted" />
-            </motion.div>
-            <h3 className="text-xl font-bold text-foreground mb-2">Keine Änderungen gefunden</h3>
-            <p className="text-muted">
-              {filter !== 'all'
+            icon={Search}
+            title="Keine Änderungen gefunden"
+            description={
+              filter !== 'all'
                 ? `Keine ${filter === 'CRITICAL' ? 'kritischen' : filter === 'IMPORTANT' ? 'wichtigen' : 'Info'}-Änderungen`
-                : 'Noch keine Änderungen erkannt'}
-            </p>
-          </motion.div>
+                : 'Noch keine Änderungen erkannt'
+            }
+            animation="bounce"
+          />
         ) : (
           <motion.div
             key="list"

@@ -26,6 +26,15 @@ from backend.database import (
 from backend.scheduler import scheduler
 
 
+async def get_url_or_404(db: AsyncSession, url_id: str) -> MonitoredUrl:
+    """Load URL from database or raise 404."""
+    result = await db.execute(select(MonitoredUrl).where(MonitoredUrl.id == url_id))
+    url = result.scalar_one_or_none()
+    if not url:
+        raise HTTPException(status_code=404, detail="URL not found")
+    return url
+
+
 # Configure logging
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper()),
@@ -265,13 +274,7 @@ async def get_urls(
 @app.get("/api/urls/{url_id}", response_model=UrlResponse)
 async def get_url(url_id: str, db: AsyncSession = Depends(get_db)):
     """Get a specific monitored URL."""
-    result = await db.execute(
-        select(MonitoredUrl).where(MonitoredUrl.id == url_id)
-    )
-    url = result.scalar_one_or_none()
-    if not url:
-        raise HTTPException(status_code=404, detail="URL not found")
-    return url
+    return await get_url_or_404(db, url_id)
 
 
 class UrlCreateRequest(BaseModel):
@@ -362,12 +365,7 @@ async def update_url(
     db: AsyncSession = Depends(get_db)
 ):
     """Update a monitored URL."""
-    result = await db.execute(
-        select(MonitoredUrl).where(MonitoredUrl.id == url_id)
-    )
-    url = result.scalar_one_or_none()
-    if not url:
-        raise HTTPException(status_code=404, detail="URL not found")
+    url = await get_url_or_404(db, url_id)
 
     # Update fields if provided
     if update_data.name is not None:
@@ -389,12 +387,7 @@ async def update_url(
 @app.patch("/api/urls/{url_id}/toggle")
 async def toggle_url(url_id: str, db: AsyncSession = Depends(get_db)):
     """Toggle URL enabled/disabled state."""
-    result = await db.execute(
-        select(MonitoredUrl).where(MonitoredUrl.id == url_id)
-    )
-    url = result.scalar_one_or_none()
-    if not url:
-        raise HTTPException(status_code=404, detail="URL not found")
+    url = await get_url_or_404(db, url_id)
 
     url.enabled = not url.enabled
     await db.commit()
@@ -410,12 +403,7 @@ async def toggle_url(url_id: str, db: AsyncSession = Depends(get_db)):
 @app.delete("/api/urls/{url_id}")
 async def delete_url(url_id: str, db: AsyncSession = Depends(get_db)):
     """Delete a monitored URL and all associated data."""
-    result = await db.execute(
-        select(MonitoredUrl).where(MonitoredUrl.id == url_id)
-    )
-    url = result.scalar_one_or_none()
-    if not url:
-        raise HTTPException(status_code=404, detail="URL not found")
+    url = await get_url_or_404(db, url_id)
 
     url_name = url.name
 

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertTriangle, AlertCircle, Info, ExternalLink, ChevronDown, Clock } from 'lucide-react'
 import type { Change } from '@/lib/useApi'
+import { formatDate } from '@/lib/dateUtils'
 
 type Priority = 'CRITICAL' | 'IMPORTANT' | 'INFO'
 
@@ -50,25 +51,6 @@ const priorityConfig: Record<Priority, {
     text: 'text-primary',
     pulse: false,
   },
-}
-
-function formatDate(dateStr: string | undefined): string {
-  if (!dateStr) return 'Unbekannt'
-  try {
-    const date = new Date(dateStr)
-    if (isNaN(date.getTime())) return 'Unbekannt'
-    return date.toLocaleString('de-DE', {
-      timeZone: 'Europe/Berlin',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    })
-  } catch {
-    return 'Unbekannt'
-  }
 }
 
 function formatConfidence(confidence: number | undefined): number {
@@ -263,10 +245,25 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
                     {change.diff.split('\n').map((line, i) => {
                       const isAddition = line.startsWith('+ ')
                       const isDeletion = line.startsWith('- ')
-                      // Only slice prefix if it's actually a diff line
-                      const lineContent = (isAddition || isDeletion) ? line.slice(2) : line
+                      const isContext = line.startsWith('  ')
+                      const isSeparator = line === '···'
 
+                      // Skip empty lines
                       if (!line.trim()) return null
+
+                      // Render separator between diff hunks
+                      if (isSeparator) {
+                        return (
+                          <div key={i} className="flex items-center py-2 bg-white/5">
+                            <div className="flex-1 border-t border-white/10" />
+                            <span className="px-3 text-xs text-muted">···</span>
+                            <div className="flex-1 border-t border-white/10" />
+                          </div>
+                        )
+                      }
+
+                      // Get line content without prefix
+                      const lineContent = (isAddition || isDeletion || isContext) ? line.slice(2) : line
 
                       return (
                         <div
@@ -276,14 +273,14 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
                               ? 'bg-green-500/30 border-l-4 border-green-500'
                               : isDeletion
                               ? 'bg-red-500/30 border-l-4 border-red-500'
-                              : 'bg-white/5'
+                              : 'bg-white/5 border-l-4 border-transparent'
                           }`}
                         >
                           {/* Line indicator */}
                           <div className={`w-8 flex-shrink-0 text-center py-1.5 text-xs font-bold select-none ${
                             isAddition ? 'text-green-400 bg-green-500/20'
                             : isDeletion ? 'text-red-400 bg-red-500/20'
-                            : 'text-muted bg-white/5'
+                            : 'text-muted/50 bg-white/5'
                           }`}>
                             {isAddition ? '+' : isDeletion ? '−' : ' '}
                           </div>
@@ -291,7 +288,7 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
                           <div className={`flex-1 px-3 py-1.5 ${
                             isAddition ? 'text-green-200'
                             : isDeletion ? 'text-red-200'
-                            : 'text-foreground'
+                            : 'text-muted'
                           }`}>
                             <span className="whitespace-pre-wrap break-all">{lineContent}</span>
                           </div>

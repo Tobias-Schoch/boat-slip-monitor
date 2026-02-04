@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
+import { fetchApi, postApi, putApi, patchApi, deleteApi } from './api'
 
 export interface MonitoredUrl {
   id: string
@@ -62,9 +61,7 @@ export function useApi() {
   const fetchUrls = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${API_BASE}/api/urls`)
-      if (!response.ok) throw new Error('Failed to fetch URLs')
-      const data = await response.json()
+      const data = await fetchApi<MonitoredUrl[]>('/api/urls')
       setUrls(data)
       setError(null)
     } catch (err) {
@@ -80,13 +77,7 @@ export function useApi() {
 
   const fetchChecks = async (urlId?: string, limit = 50): Promise<Check[]> => {
     try {
-      const params = new URLSearchParams()
-      if (urlId) params.append('url_id', urlId)
-      params.append('limit', limit.toString())
-
-      const response = await fetch(`${API_BASE}/api/checks?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch checks')
-      return await response.json()
+      return await fetchApi<Check[]>('/api/checks', { url_id: urlId, limit })
     } catch (err) {
       console.error('Failed to fetch checks:', err)
       return []
@@ -99,14 +90,7 @@ export function useApi() {
     limit = 50
   ): Promise<Change[]> => {
     try {
-      const params = new URLSearchParams()
-      if (urlId) params.append('url_id', urlId)
-      if (priority) params.append('priority', priority)
-      params.append('limit', limit.toString())
-
-      const response = await fetch(`${API_BASE}/api/changes?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch changes')
-      return await response.json()
+      return await fetchApi<Change[]>('/api/changes', { url_id: urlId, priority, limit })
     } catch (err) {
       console.error('Failed to fetch changes:', err)
       return []
@@ -114,62 +98,24 @@ export function useApi() {
   }
 
   const createUrl = async (data: UrlCreateData): Promise<MonitoredUrl> => {
-    const response = await fetch(`${API_BASE}/api/urls`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || 'Failed to create URL')
-    }
-
-    const newUrl = await response.json()
+    const newUrl = await postApi<MonitoredUrl, UrlCreateData>('/api/urls', data)
     setUrls(prev => [...prev, newUrl].sort((a, b) => a.name.localeCompare(b.name)))
     return newUrl
   }
 
   const updateUrl = async (id: string, data: UrlUpdateData): Promise<MonitoredUrl> => {
-    const response = await fetch(`${API_BASE}/api/urls/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || 'Failed to update URL')
-    }
-
-    const updatedUrl = await response.json()
+    const updatedUrl = await putApi<MonitoredUrl, UrlUpdateData>(`/api/urls/${id}`, data)
     setUrls(prev => prev.map(u => (u.id === id ? updatedUrl : u)))
     return updatedUrl
   }
 
-  const deleteUrl = async (id: string): Promise<void> => {
-    const response = await fetch(`${API_BASE}/api/urls/${id}`, {
-      method: 'DELETE',
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.detail || 'Failed to delete URL')
-    }
-
+  const deleteUrlFn = async (id: string): Promise<void> => {
+    await deleteApi(`/api/urls/${id}`)
     setUrls(prev => prev.filter(u => u.id !== id))
   }
 
   const toggleUrl = async (id: string): Promise<{ enabled: boolean }> => {
-    const response = await fetch(`${API_BASE}/api/urls/${id}/toggle`, {
-      method: 'PATCH',
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to toggle URL')
-    }
-
-    const result = await response.json()
+    const result = await patchApi<{ enabled: boolean }>(`/api/urls/${id}/toggle`)
     setUrls(prev => prev.map(u => (u.id === id ? { ...u, enabled: result.enabled } : u)))
     return result
   }
@@ -183,7 +129,7 @@ export function useApi() {
     fetchChanges,
     createUrl,
     updateUrl,
-    deleteUrl,
+    deleteUrl: deleteUrlFn,
     toggleUrl,
   }
 }

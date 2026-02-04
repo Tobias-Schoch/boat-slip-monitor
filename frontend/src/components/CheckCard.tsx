@@ -3,28 +3,13 @@
 import { motion } from 'framer-motion'
 import { Clock, Zap, ChevronRight } from 'lucide-react'
 import type { Check } from '@/lib/useApi'
+import { formatTime } from '@/lib/dateUtils'
 
 type CheckStatus = 'SUCCESS' | 'FAILED' | 'TIMEOUT'
 
 interface CheckCardProps {
   check: Check
   index?: number
-}
-
-function formatTime(dateStr: string | undefined): string {
-  if (!dateStr) return '--:--:--'
-  try {
-    const date = new Date(dateStr)
-    if (isNaN(date.getTime())) return '--:--:--'
-    return date.toLocaleTimeString('de-DE', {
-      timeZone: 'Europe/Berlin',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    })
-  } catch {
-    return '--:--:--'
-  }
 }
 
 const statusConfig: Record<CheckStatus, {

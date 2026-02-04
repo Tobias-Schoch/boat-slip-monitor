@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from diff_match_patch import diff_match_patch
 
 from backend.database import ChangeType, Priority
-from backend.utils import clean_html_for_diff
+from backend.utils import clean_html
 
 
 logger = logging.getLogger(__name__)
@@ -234,25 +234,19 @@ class ChangeDetector:
 
         return FormDetectionResult(detected=False, form_type='', confidence=0)
 
+    def _match_keywords(self, html: str, keywords: list) -> list:
+        """Find matching keywords in HTML content."""
+        html_lower = html.lower()
+        return [kw for kw in keywords if kw.lower() in html_lower]
+
     def detect_keywords(self, normalized_html: str) -> KeywordMatchResult:
         """
         Detect keywords in normalized HTML.
 
         Port of TypeScript detectKeywords method.
         """
-        html_lower = normalized_html.lower()
-        matched_critical: List[str] = []
-        matched_important: List[str] = []
-
-        # Check critical keywords
-        for keyword in CRITICAL_KEYWORDS:
-            if keyword.lower() in html_lower:
-                matched_critical.append(keyword)
-
-        # Check important keywords
-        for keyword in IMPORTANT_KEYWORDS:
-            if keyword.lower() in html_lower:
-                matched_important.append(keyword)
+        matched_critical = self._match_keywords(normalized_html, CRITICAL_KEYWORDS)
+        matched_important = self._match_keywords(normalized_html, IMPORTANT_KEYWORDS)
 
         if matched_critical:
             # More user-friendly descriptions based on keywords
@@ -293,43 +287,64 @@ class ChangeDetector:
             keywords=[]
         )
 
-    def generate_diff(self, old_content: str, new_content: str, max_length: int = 5000) -> str:
+    def generate_diff(self, old_content: str, new_content: str, max_length: int = 5000, context_lines: int = 2) -> str:
         """Generate human-readable diff between old and new content.
 
-        Shows the actual differences without aggressive cleaning,
+        Shows the actual differences with context lines before and after,
         so users can see exactly what changed.
+
+        Args:
+            old_content: Previous HTML content
+            new_content: Current HTML content
+            max_length: Maximum length of the diff output
+            context_lines: Number of unchanged lines to show before/after each change
         """
         try:
             # Light cleaning only - remove head/script/style but keep body content
             old_cleaned = self._light_clean_for_diff(old_content)
             new_cleaned = self._light_clean_for_diff(new_content)
 
-            # Use diff_match_patch for diff generation
-            diffs = self.dmp.diff_main(old_cleaned, new_cleaned)
-            self.dmp.diff_cleanupSemantic(diffs)
+            # Split into lines for line-based diff with context
+            old_lines = old_cleaned.split('\n')
+            new_lines = new_cleaned.split('\n')
+
+            # Use difflib for unified diff with context
+            import difflib
+            differ = difflib.unified_diff(
+                old_lines,
+                new_lines,
+                lineterm='',
+                n=context_lines  # Context lines before/after
+            )
 
             # Build human-readable diff
-            lines = []
-            for op, text in diffs:
-                # Truncate very long text blocks
-                display_text = text[:500] + '...' if len(text) > 500 else text
+            output_lines = []
+            for line in differ:
+                # Skip the diff headers (---, +++, @@)
+                if line.startswith('---') or line.startswith('+++'):
+                    continue
+                if line.startswith('@@'):
+                    # Add separator between hunks
+                    if output_lines:
+                        output_lines.append('···')
+                    continue
 
-                # Keep whitespace visible but normalize for display
-                display_text = display_text.replace('\n', '↵\n').replace('\t', '→')
+                # Truncate very long lines
+                display_line = line[:500] + '...' if len(line) > 500 else line
 
-                if not display_text.strip():
-                    # Show whitespace-only changes
-                    display_text = repr(text[:100])[1:-1]  # Show escaped version
-                    if len(text) > 100:
-                        display_text += '...'
+                # Normalize tabs for display
+                display_line = display_line.replace('\t', '→')
 
-                if op == -1:  # Deletion
-                    lines.append(f"- {display_text}")
-                elif op == 1:  # Addition
-                    lines.append(f"+ {display_text}")
-                # op == 0 is unchanged, we skip those for brevity
+                if line.startswith('-'):
+                    output_lines.append(f"- {display_line[1:]}")
+                elif line.startswith('+'):
+                    output_lines.append(f"+ {display_line[1:]}")
+                elif line.startswith(' '):
+                    output_lines.append(f"  {display_line[1:]}")
+                else:
+                    output_lines.append(f"  {display_line}")
 
-            result = '\n'.join(lines)
+            result = '\n'.join(output_lines)
 
             # Truncate if too long
             if len(result) > max_length:
@@ -342,29 +357,7 @@ class ChangeDetector:
 
     def _light_clean_for_diff(self, html: str) -> str:
         """Light cleaning for diff display - keeps more content visible."""
-        import re
-
-        if not html:
-            return ""
-
-        # Extract body only
-        body_match = re.search(r'<body[^>]*>(.*?)</body>', html, re.DOTALL | re.IGNORECASE)
-        if body_match:
-            html = body_match.group(1)
-
-        # Remove script tags
-        html = re.sub(r'<script[^>]*>.*?</script>', '', html, flags=re.DOTALL | re.IGNORECASE)
-
-        # Remove style tags
-        html = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL | re.IGNORECASE)
-
-        # Remove HTML comments
-        html = re.sub(r'<!--.*?-->', '', html, flags=re.DOTALL)
-
-        # Normalize whitespace a bit (but keep structure)
-        html = re.sub(r'\n\s*\n', '\n', html)
-
-        return html.strip()
+        return clean_html(html, aggressive=False)
 
     def extract_form_fields(self, html: str) -> List[Dict[str, Any]]:
         """Extract form fields from HTML."""

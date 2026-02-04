@@ -7,24 +7,8 @@ import type { MonitoredUrl, UrlCreateData, UrlUpdateData } from '@/lib/useApi'
 import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { Input } from './ui/Input'
-
-function formatDateTime(dateStr: string | undefined): string {
-  if (!dateStr) return 'Nie'
-  try {
-    const date = new Date(dateStr)
-    if (isNaN(date.getTime())) return 'Nie'
-    return date.toLocaleString('de-DE', {
-      timeZone: 'Europe/Berlin',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return 'Nie'
-  }
-}
+import { LoadingSpinner } from './ui/LoadingSpinner'
+import { formatDateTime } from '@/lib/dateUtils'
 
 interface UrlListProps {
   urls: MonitoredUrl[]
@@ -173,16 +157,7 @@ export function UrlList({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="text-center">
-          <motion.div
-            className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          />
-          <p className="text-muted">URLs werden geladen...</p>
-        </div>
-      </div>
+      <LoadingSpinner size="md" message="URLs werden geladen..." className="py-16" />
     )
   }
 
