@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Search, Clock, ChevronDown, ChevronUp } from 'lucide-react'
 import type { Check, Change, MonitoredUrl } from '@/lib/useApi'
 import { CheckCard } from './CheckCard'
 import { ChangeCard } from './ChangeCard'
@@ -30,8 +31,11 @@ const filterButtons: { id: FilterType; label: string; activeClass: string }[] = 
   { id: 'important', label: 'Important', activeClass: 'bg-warning text-white shadow-warning/30' },
 ]
 
+const COLLAPSED_LIMIT = 3
+
 export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
   const [filter, setFilter] = useState<FilterType>('all')
+  const [showAllChanges, setShowAllChanges] = useState(false)
 
   const filteredChanges = changes.filter((change) => {
     if (filter === 'all') return true
@@ -39,6 +43,13 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
     if (filter === 'important') return change.priority === 'IMPORTANT'
     return true
   })
+
+  // When filter is active, show all. Otherwise respect collapsed state
+  const displayedChanges = (filter !== 'all' || showAllChanges)
+    ? filteredChanges
+    : filteredChanges.slice(0, COLLAPSED_LIMIT)
+
+  const hasMoreChanges = filter === 'all' && filteredChanges.length > COLLAPSED_LIMIT
 
   const criticalCount = changes.filter((c) => c.priority === 'CRITICAL').length
 
@@ -73,7 +84,7 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
         transition={{ delay: 0.3 }}
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Recent Changes</h2>
+          <h2 className="text-2xl font-bold text-foreground">Letzte Änderungen</h2>
           <div className="flex gap-2">
             {filterButtons.map((btn) => (
               <motion.button
@@ -103,15 +114,15 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
               className="glass-ultra rounded-2xl p-16 text-center"
             >
               <motion.div
-                className="text-6xl mb-6"
+                className="mb-6 flex justify-center"
                 animate={{ y: [-5, 5, -5] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               >
-                🔍
+                <Search className="w-16 h-16 text-muted" />
               </motion.div>
-              <h3 className="text-xl font-bold text-foreground mb-2">No changes detected yet</h3>
+              <h3 className="text-xl font-bold text-foreground mb-2">Keine Änderungen gefunden</h3>
               <p className="text-muted">
-                Checks are running automatically every 3-5 minutes
+                Checks laufen automatisch alle 3-5 Minuten
               </p>
             </motion.div>
           ) : (
@@ -122,9 +133,25 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
               exit={{ opacity: 0 }}
               className="space-y-4"
             >
-              {filteredChanges.map((change, index) => (
+              {displayedChanges.map((change, index) => (
                 <ChangeCard key={change.id} change={change} index={index} />
               ))}
+
+              {/* Show more/less button */}
+              {hasMoreChanges && (
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  onClick={() => setShowAllChanges(!showAllChanges)}
+                  className="w-full py-3 rounded-xl bg-white/5 text-muted hover:text-foreground hover:bg-white/10 font-medium transition-all"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  {showAllChanges
+                    ? 'Weniger anzeigen'
+                    : `${filteredChanges.length - COLLAPSED_LIMIT} weitere anzeigen`}
+                </motion.button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -137,9 +164,9 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
         transition={{ delay: 0.4 }}
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Recent Checks</h2>
+          <h2 className="text-2xl font-bold text-foreground">Letzte Checks</h2>
           <span className="text-sm text-muted px-3 py-1 rounded-lg bg-white/5">
-            Last {cronInterval} min
+            Letzte {cronInterval} Min
           </span>
         </div>
 
@@ -153,15 +180,15 @@ export function Dashboard({ checks, changes, urls = [] }: DashboardProps) {
               className="glass-ultra rounded-2xl p-16 text-center"
             >
               <motion.div
-                className="text-6xl mb-6"
+                className="mb-6 flex justify-center"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
               >
-                ⏳
+                <Clock className="w-16 h-16 text-muted" />
               </motion.div>
-              <h3 className="text-xl font-bold text-foreground mb-2">No checks in the last {cronInterval} minutes</h3>
+              <h3 className="text-xl font-bold text-foreground mb-2">Keine Checks in den letzten {cronInterval} Minuten</h3>
               <p className="text-muted">
-                Waiting for the next check cycle...
+                Warte auf den nächsten Check-Zyklus...
               </p>
             </motion.div>
           ) : (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Search, Loader2 } from 'lucide-react'
 import type { Change } from '@/lib/useApi'
 import { ChangeCard } from './ChangeCard'
 
@@ -11,9 +12,9 @@ const PAGE_SIZE = 20
 type FilterPriority = 'all' | 'CRITICAL' | 'IMPORTANT' | 'INFO'
 
 const filterButtons: { id: FilterPriority; label: string; activeClass: string }[] = [
-  { id: 'all', label: 'All', activeClass: 'bg-primary text-white shadow-primary/30' },
-  { id: 'CRITICAL', label: 'Critical', activeClass: 'bg-error text-white shadow-error/30' },
-  { id: 'IMPORTANT', label: 'Important', activeClass: 'bg-warning text-white shadow-warning/30' },
+  { id: 'all', label: 'Alle', activeClass: 'bg-primary text-white shadow-primary/30' },
+  { id: 'CRITICAL', label: 'Kritisch', activeClass: 'bg-error text-white shadow-error/30' },
+  { id: 'IMPORTANT', label: 'Wichtig', activeClass: 'bg-warning text-white shadow-warning/30' },
   { id: 'INFO', label: 'Info', activeClass: 'bg-primary text-white shadow-primary/30' },
 ]
 
@@ -77,9 +78,9 @@ export function ChangesList() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">All Changes</h2>
+          <h2 className="text-2xl font-bold text-foreground">Alle Änderungen</h2>
           <p className="text-muted text-sm mt-1">
-            {changes.length} changes loaded
+            {changes.length} Änderungen geladen
           </p>
         </div>
 

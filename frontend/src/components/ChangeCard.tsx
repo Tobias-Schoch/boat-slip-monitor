@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { AlertTriangle, AlertCircle, Info, ExternalLink, ChevronDown, Clock } from 'lucide-react'
 import type { Change } from '@/lib/useApi'
 
 type Priority = 'CRITICAL' | 'IMPORTANT' | 'INFO'
@@ -11,11 +12,16 @@ interface ChangeCardProps {
   index?: number
 }
 
+const priorityIcons = {
+  CRITICAL: AlertCircle,
+  IMPORTANT: AlertTriangle,
+  INFO: Info,
+}
+
 const priorityConfig: Record<Priority, {
   bg: string
   border: string
   glow: string
-  icon: string
   iconBg: string
   text: string
   pulse: boolean
@@ -24,7 +30,6 @@ const priorityConfig: Record<Priority, {
     bg: 'from-error/30 via-error/10 to-transparent',
     border: 'border-error/50',
     glow: 'shadow-[0_0_30px_rgba(239,68,68,0.3)]',
-    icon: '🚨',
     iconBg: 'bg-error/20',
     text: 'text-error',
     pulse: true,
@@ -33,7 +38,6 @@ const priorityConfig: Record<Priority, {
     bg: 'from-warning/25 via-warning/10 to-transparent',
     border: 'border-warning/40',
     glow: 'shadow-[0_0_20px_rgba(245,158,11,0.2)]',
-    icon: '⚠️',
     iconBg: 'bg-warning/20',
     text: 'text-warning',
     pulse: false,
@@ -42,7 +46,6 @@ const priorityConfig: Record<Priority, {
     bg: 'from-primary/20 via-primary/5 to-transparent',
     border: 'border-primary/30',
     glow: 'shadow-[0_0_15px_rgba(59,130,246,0.2)]',
-    icon: 'ℹ️',
     iconBg: 'bg-primary/20',
     text: 'text-primary',
     pulse: false,
@@ -117,11 +120,14 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
           <div className="flex items-start gap-4">
             {/* Animated icon */}
             <motion.div
-              className={`text-3xl p-3 rounded-xl ${config.iconBg}`}
+              className={`p-3 rounded-xl ${config.iconBg}`}
               animate={config.pulse ? { scale: [1, 1.1, 1] } : {}}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
-              {config.icon}
+              {(() => {
+                const Icon = priorityIcons[change.priority] || priorityIcons.INFO
+                return <Icon className={`w-7 h-7 ${config.text}`} />
+              })()}
             </motion.div>
 
             <div>
@@ -139,14 +145,7 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
               </div>
 
               <p className="text-sm text-muted flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <Clock className="w-4 h-4" />
                 {formatDate(change.created_at)}
               </p>
             </div>
@@ -154,7 +153,7 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
 
           {/* Type badge */}
           <div className="text-right">
-            <div className="text-xs text-muted mb-1 uppercase tracking-wider">Type</div>
+            <div className="text-xs text-muted mb-1 uppercase tracking-wider">Typ</div>
             <div className="text-sm font-semibold text-foreground px-3 py-1 rounded-lg bg-white/5">
               {change.type}
             </div>
@@ -180,7 +179,7 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
             className="mb-4"
           >
             <div className="text-xs text-muted mb-2 uppercase tracking-wider">
-              Matched Keywords
+              Gefundene Keywords
             </div>
             <div className="flex flex-wrap gap-2">
               {change.matched_keywords.map((keyword, i) => (
@@ -208,20 +207,8 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
               className="flex items-center gap-2 text-primary hover:text-primary-light font-semibold transition-colors group"
               whileHover={{ x: 3 }}
             >
-              View Page
-              <svg
-                className="w-4 h-4 transition-transform group-hover:translate-x-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
+              Seite öffnen
+              <ExternalLink className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </motion.a>
           )}
 
@@ -232,20 +219,8 @@ export function ChangeCard({ change, index = 0 }: ChangeCardProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <svg
-                className={`w-4 h-4 transition-transform ${showDiff ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-              {showDiff ? 'Hide' : 'Show'} Diff
+              <ChevronDown className={`w-4 h-4 transition-transform ${showDiff ? 'rotate-180' : ''}`} />
+              {showDiff ? 'Diff ausblenden' : 'Diff anzeigen'}
             </motion.button>
           )}
 

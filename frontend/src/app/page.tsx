@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { LayoutDashboard, Bell, Link2, Settings } from 'lucide-react'
 import { Dashboard } from '@/components/Dashboard'
 import { UrlList } from '@/components/UrlList'
 import { ChangesList } from '@/components/ChangesList'
@@ -14,11 +15,18 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
 type TabId = 'dashboard' | 'changes' | 'urls' | 'settings'
 
-const tabs: { id: TabId; label: string; icon: string }[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-  { id: 'changes', label: 'Changes', icon: '🔔' },
-  { id: 'urls', label: 'URLs', icon: '🔗' },
-  { id: 'settings', label: 'Settings', icon: '⚙️' },
+const tabIcons = {
+  dashboard: LayoutDashboard,
+  changes: Bell,
+  urls: Link2,
+  settings: Settings,
+}
+
+const tabs: { id: TabId; label: string }[] = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'changes', label: 'Änderungen' },
+  { id: 'urls', label: 'URLs' },
+  { id: 'settings', label: 'Einstellungen' },
 ]
 
 export default function Home() {
@@ -175,7 +183,10 @@ export default function Home() {
                     />
                   )}
                   <span className="relative z-10 flex items-center gap-2">
-                    <span>{tab.icon}</span>
+                    {(() => {
+                      const Icon = tabIcons[tab.id]
+                      return <Icon className="w-4 h-4" />
+                    })()}
                     <span>{tab.label}</span>
                     {tab.id === 'urls' && (
                       <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary">
